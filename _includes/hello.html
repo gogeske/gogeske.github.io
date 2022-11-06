@@ -1,0 +1,17 @@
+<script>
+  var greetings;
+  window.addEventListener('load', greet);
+  window.addEventListener('click', greet);
+  function greet() {
+  if(!Array.isArray(greetings)){
+      greetings=document.querySelector(".home").textContent
+        .split("\n")
+        .map(element => element.trim()) // remove spaces
+        .filter((value, index, self) => self.indexOf(value) === index) // make unique
+        .filter(element => element); // remove empty values
+      document.querySelectorAll(".home p").forEach(e => e.remove());
+    }
+    hello=greetings[Math.floor(Math.random() * greetings.length)];
+    document.querySelector(".home h1").textContent=hello;
+  }
+</script>
