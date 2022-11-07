@@ -2,6 +2,7 @@
   var greetings;
   window.addEventListener('load', greet);
   window.addEventListener('click', greet);
+  window.addEventListener('touchend', greet);
   function greet() {
   if(!Array.isArray(greetings)){
       greetings=document.querySelector(".home").textContent
