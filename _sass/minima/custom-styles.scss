@@ -20,5 +20,14 @@
 }
 
 h1 {
+    display: flex;
+    justify-content: center;
     font-size: 5.9vw;
+}
+
+aside {
+    display: flex;
+    justify-content: center;
+    color: darkorange;
+    visibility: hidden;
 }

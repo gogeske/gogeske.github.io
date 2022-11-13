@@ -8,7 +8,7 @@ greetings:
     text: Cześć.
   - lang: de
     text: Hallo.
-  - lang: se
+  - lang: sv
     text: Hej.
   - lang: en
     text: Hello.

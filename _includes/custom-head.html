@@ -1,4 +1,5 @@
 <script>
+  const languageNames = new Intl.DisplayNames(['en'], { type: 'language' });
   var greetings,w,style;
   window.addEventListener('load', load);
   ['touchstart', 'mousedown', 'keydown'].forEach(function(e) {
@@ -6,24 +7,22 @@
   });
 
   function load() {
-    if(!Array.isArray(greetings)){
-      greetings=document.querySelector(".home").textContent
-        .split("\n")
-        .map(element => element.trim()) // remove spaces
-        .filter((value, index, self) => self.indexOf(value) === index) // make unique
-        .filter(element => element); // remove empty values
-      document.querySelectorAll(".home p").forEach(e => e.remove());
-      w=document.querySelector(".wrapper"),
-      style = w.style;
-    }
+    greetings=document.querySelectorAll(".home p");
+    greetings.forEach(node => { node.remove(); });
+    w=document.querySelector(".wrapper"),
+    style = w.style;
   }
 
   function greet(e) {
-    hello=greetings[Math.floor(Math.random() * greetings.length)];
-    document.querySelector(".home h1").textContent=hello;
-    console.log(e);
-    console.log(style);
-    
+    node=greetings[Math.floor(Math.random() * greetings.length)];
+    document.querySelector(".home h1").textContent=node.textContent;
+    if(node.lang) {
+      label = document.querySelector("#language");
+      label.textContent="This is hello in " + languageNames.of(node.lang) + ".";
+      label.style="visibility: visible;";
+    } else {
+      document.querySelector("#language").style="visibility: hidden;";
+    }
     style.animation = "";
     style.webkitAnimation = "";
     void w.offsetParent;
