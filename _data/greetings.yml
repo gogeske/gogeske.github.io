@@ -24,7 +24,7 @@ greetings:
     text: ¿Qué tal?
   - lang: fr
     text: Salut.
-  - lang: in
+  - lang: hi
     text: नमस्ते
-  - lang: cn
+  - lang: zh
     text: 你好
