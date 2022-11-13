@@ -1,0 +1,30 @@
+emojis: [ ✌️, 👋, 🖖, 🤗, 🤙, 🤟, 🫰, 🫶, 🙌, 🚀 ]
+greetings:
+  - lang: fr
+    text: Bonjour.
+  - lang: it
+    text: Ciao.
+  - lang: pl
+    text: Cześć.
+  - lang: de
+    text: Hallo.
+  - lang: se
+    text: Hej.
+  - lang: en
+    text: Hello.
+  - lang: en
+    text: Hi.
+  - lang: es
+    text: ¡Hola!
+  - lang: pt
+    text: Oi.
+  - lang: pt
+    text: Olá.
+  - lang: es
+    text: ¿Qué tal?
+  - lang: fr
+    text: Salut.
+  - lang: in
+    text: नमस्ते
+  - lang: cn
+    text: 你好

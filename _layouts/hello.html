@@ -3,13 +3,21 @@
 
   {%- include head.html -%}
 
-  <body style="font-size: 4em">
+  <body>
 
     <main class="page-content" aria-label="Content">
     <div class="wrapper">
       <div class="home">
         <h1>{{ page.title }}</h1>
-        {{ content }}
+        {{ content }} 
+
+        {% for emoji in site.data.greetings.emojis %}
+        <p>{{ emoji }}</p>
+        {% endfor %}
+
+        {% for greeting in site.data.greetings.greetings %}
+        <p lang="{{ greeting.lang }}">{{ greeting.text | capitalize }}</p>
+        {% endfor %}
       </div>
     </div>
     </main>
