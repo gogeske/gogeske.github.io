@@ -5,5 +5,3 @@
 layout: hello
 title: Hello.
 ---
-
-Hello.

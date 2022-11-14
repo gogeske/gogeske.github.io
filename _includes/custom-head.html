@@ -1,6 +1,6 @@
 <script>
   const languageNames = new Intl.DisplayNames(['en'], { type: 'language' });
-  var greetings,w,style;
+  var greetings, last, w, style;
   window.addEventListener('load', load);
   ['touchstart', 'mousedown', 'keydown'].forEach(function(e) {
     window.addEventListener(e, greet);
@@ -10,18 +10,31 @@
     greetings=document.querySelectorAll(".home p");
     greetings.forEach(node => { node.remove(); });
     w=document.querySelector(".wrapper"),
-    style = w.style;
+      style = w.style;
+  }
+
+  function getRandomNode() {
+    var num = Math.floor(Math.random() * greetings.length);
+    var node=greetings[num];
+    if(node === last) {
+      return getRandomNode();
+    }
+    last=node;
+    return node;
   }
 
   function greet(e) {
-    node=greetings[Math.floor(Math.random() * greetings.length)];
-    document.querySelector(".home h1").textContent=node.textContent;
+    var node = getRandomNode();
+    var home=document.querySelector(".home");
+    var h1=document.querySelector(".home h1");
+    var lang=document.querySelector("#language");
+    h1.textContent=node.textContent;
     if(node.lang) {
-      label = document.querySelector("#language");
-      label.textContent="This is hello in " + languageNames.of(node.lang) + ".";
-      label.style="visibility: visible;";
+      lang.textContent="This is hello in " + languageNames.of(node.lang) + ".";
+      home.style="background-color: black;";
     } else {
-      document.querySelector("#language").style="visibility: hidden;";
+      lang.textContent="";
+      home.style="background-color: transparent;";
     }
     style.animation = "";
     style.webkitAnimation = "";
