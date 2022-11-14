@@ -1,6 +1,8 @@
 <script>
   const languageNames = new Intl.DisplayNames(['en'], { type: 'language' });
-  var greetings, last, w, style;
+  const regionNames = new Intl.DisplayNames(['en'], {type: 'region'});
+
+  let greetings, last, w, style;
   window.addEventListener('load', load);
   ['touchstart', 'mousedown', 'keydown'].forEach(function(e) {
     window.addEventListener(e, greet);
@@ -14,8 +16,8 @@
   }
 
   function getRandomNode() {
-    var num = Math.floor(Math.random() * greetings.length);
-    var node=greetings[num];
+    let num = Math.floor(Math.random() * greetings.length);
+    let node=greetings[num];
     if(node === last) {
       return getRandomNode();
     }
@@ -24,18 +26,24 @@
   }
 
   function greet(e) {
-    var node = getRandomNode();
-    var home=document.querySelector(".home");
-    var h1=document.querySelector(".home h1");
-    var lang=document.querySelector("#language");
+    let node = getRandomNode();
+    let home=document.querySelector(".home");
+    let h1=document.querySelector(".home h1");
+    let lang=document.querySelector("#language");
     h1.textContent=node.textContent;
+    let keywords="";
     if(node.lang) {
       lang.textContent="This is hello in " + languageNames.of(node.lang) + ".";
       home.style="background-color: black;";
+      try {
+        keywords="?architecture,"+regionNames.of(node.lang);
+      } catch {}
     } else {
       lang.textContent="";
       home.style="background-color: transparent;";
     }
+    document.querySelector("html").style="background: url(https://source.unsplash.com/random"+keywords+")";
+
     style.animation = "";
     style.webkitAnimation = "";
     void w.offsetParent;

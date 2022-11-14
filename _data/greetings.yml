@@ -2,6 +2,8 @@ emojis: [ ✌️, 👋, 🖖, 🤗, 🤙, 🤟, 🫰, 🫶, 🙌, 🚀 ]
 greetings:
   - lang: fr
     text: Bonjour.
+  - lang: fr
+    text: Salut.
   - lang: it
     text: Ciao.
   - lang: pl
@@ -11,20 +13,23 @@ greetings:
   - lang: sv
     text: Hej.
   - lang: en
+    text: G'day.
+  - lang: en
     text: Hello.
   - lang: en
     text: Hi.
   - lang: es
     text: ¡Hola!
+  - lang: mi
+    text: Kia ora.
   - lang: pt
     text: Oi.
   - lang: pt
     text: Olá.
   - lang: es
     text: ¿Qué tal?
-  - lang: fr
-    text: Salut.
   - lang: hi
     text: नमस्ते
   - lang: zh
     text: 你好
+    
