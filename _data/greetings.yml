@@ -28,8 +28,6 @@ greetings:
     text: Olá.
   - lang: es
     text: ¿Qué tal?
-  - lang: hi
-    text: नमस्ते
   - lang: zh
     text: 你好
   - lang: zh-HK
