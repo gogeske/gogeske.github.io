@@ -3,7 +3,7 @@
 
   let greetings, last, w, style;
   window.addEventListener('load', load);
-  ['touchstart', 'mousedown', 'keydown'].forEach(function(e) {
+  ['touchstart', 'mousedown'].forEach(function(e) {
     window.addEventListener(e, greet);
   });
 
@@ -12,6 +12,7 @@
     greetings.forEach(node => { node.remove(); });
     w=document.querySelector(".wrapper"),
       style = w.style;
+    updateImage("Hello");
   }
 
   function getRandomNode() {
@@ -33,16 +34,13 @@
     if(language) {
       greetingElement.lang=language;
       greetingDescription.textContent="This is hello in " + languageNamesInEnglish.of(language) + ".";
-      home.style="background-color: black;";
     } else {
       greetingElement.lang="";
       greetingDescription.textContent="";
-      home.style="background-color: transparent;";
     }
-    updateBackground(greeting, language);
   }
 
-  function updateBackground(greeting, locale) {
+  async function updateImage(greeting, locale) {
     let url="https://source.unsplash.com/random?";
     let keywords="space";
     if(locale) {
@@ -51,31 +49,20 @@
       keywords=keywords.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     }
     url=url.concat(keywords);
-    document.querySelector("html").style="background: url("+url+")";
-    loadImage(url);
-  }
-
-  async function loadImage(url) {
-    console.log("url", url);
     const response = await fetch(url);
+    document.querySelector("html").style="background: url("+response.url+") no-repeat center center fixed;";
+    document.querySelector("#profile a").setAttribute("href", response.url);
   }
 
   function greet(e) {
     let node = getRandomNode();
-    let greetingElement=document.querySelector(".home #greeting");
-    let greetingDescription=document.querySelector("#language");
     let greeting=node.textContent;
     let language=node.lang;
     try {
-      updateGreeting(greeting, language)
+      updateImage(greeting, language);
+      updateGreeting(greeting, language);
     } catch(err) {
       console.log(err);
     }
-
-    style.animation = "";
-    style.webkitAnimation = "";
-    void w.offsetParent;
-    style.animation = "flash 1.3s ease";
-    style.webkitAnimation = "flash 1.3s ease";
   }
 </script>

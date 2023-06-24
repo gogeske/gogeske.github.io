@@ -17,16 +17,22 @@ layout: compress
           {% for emoji in site.data.greetings.emojis %}
           <li><p>{{ emoji }}</p></li>
           {% endfor %}
-          
+
           {% for greeting in site.data.greetings.greetings %}
           <li><p lang="{{ greeting.lang }}">{{ greeting.text }}</p></li>
           {% endfor %}
         </ul>
       </div>
     </div>
+    
+    <footer>
+      <span id="credit">
+        <p id="profile">Photo by <a target="_blank">https://unsplash.com/</a></p>
+      </span>
+    </footer>
 
     </main>
-
+    
   </body>
 
 </html>

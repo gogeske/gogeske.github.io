@@ -1,12 +1,3 @@
-@keyframes flash {
-    0%, 100% {
-        background-color: inherit;
-    }
-    20% {
-        background-color: blanchedalmond;
-    }
-}
-
 .page-content {
     padding: 0;
 }
@@ -19,11 +10,9 @@
     width: 100vw;
 }
 
-.home {
-    background-color: black;
+.home, p {
     color: #fff;
     padding: 0.5rem;
-
     -webkit-box-decoration-break: clone;
     box-decoration-break: clone;
 }
@@ -40,7 +29,6 @@ aside {
 }
 
 html { 
-    background: url(https://source.unsplash.com/random?architecture) no-repeat center center fixed; 
     -webkit-background-size: cover;
     -moz-background-size: cover;
     -o-background-size: cover;
@@ -53,4 +41,10 @@ body {
 
 ul {
     display: none;
+}
+
+footer {
+    vertical-align: bottom;
+    display: inline-block;
+    padding: 2%;
 }
