@@ -13,13 +13,15 @@ layout: compress
       <div class="home">
         <h1 id="greeting">{{ page.title }}</h1>
         <aside id="language">{{ content }}</aside>
-        {% for emoji in site.data.greetings.emojis %}
-        <p>{{ emoji }}</p>
-        {% endfor %}
-
-        {% for greeting in site.data.greetings.greetings %}
-        <p lang="{{ greeting.lang }}">{{ greeting.text }}</p>
-        {% endfor %}
+        <ul>
+          {% for emoji in site.data.greetings.emojis %}
+          <li><p>{{ emoji }}</p></li>
+          {% endfor %}
+          
+          {% for greeting in site.data.greetings.greetings %}
+          <li><p lang="{{ greeting.lang }}">{{ greeting.text }}</p></li>
+          {% endfor %}
+        </ul>
       </div>
     </div>
 
