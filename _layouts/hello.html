@@ -11,7 +11,7 @@ layout: compress
     <main class="page-content" aria-label="Content">
     <div class="wrapper">
       <div class="home">
-        <h1>{{ page.title }}</h1>
+        <h1 id="greeting">{{ page.title }}</h1>
         <aside id="language">{{ content }}</aside>
         {% for emoji in site.data.greetings.emojis %}
         <p>{{ emoji }}</p>
@@ -22,6 +22,7 @@ layout: compress
         {% endfor %}
       </div>
     </div>
+
     </main>
 
   </body>

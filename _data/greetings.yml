@@ -32,4 +32,5 @@ greetings:
     text: नमस्ते
   - lang: zh
     text: 你好
-    
+  - lang: zh-HK
+    text: 你好
