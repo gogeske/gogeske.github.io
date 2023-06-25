@@ -12,6 +12,10 @@ greetings:
     text: Hallo.
   - lang: sv
     text: Hej.
+  - lang: da
+    text: Hej.
+  - lang: da
+    text: Goddag.
   - lang: en
     text: G'day.
   - lang: en
