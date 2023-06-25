@@ -6,14 +6,83 @@ layout: compress
 
   {%- include head.html -%}
 
+  <script>
+    const languageNamesInEnglish = new Intl.DisplayNames(['en'], { type: 'language' });
+  
+    let greetings, last, w, style;
+    window.addEventListener('load', load);
+    ['touchstart', 'mousedown'].forEach(function(e) {
+      window.addEventListener(e, greet);
+    });
+  
+    function load() {
+      greetings=document.querySelectorAll(".home ul li p");
+      greetings.forEach(node => { node.remove(); });
+      w=document.querySelector(".wrapper"),
+        style = w.style;
+      updateImage("Hello");
+    }
+  
+    function getRandomNode() {
+      let num = Math.floor(Math.random() * greetings.length);
+      let node=greetings[num];
+      if(node === last) {
+        return getRandomNode();
+      }
+      last=node;
+      return node;
+    }
+  
+    function updateGreeting(greeting, language) {
+      let home=document.querySelector(".home");
+      let greetingElement=document.querySelector(".home #greeting");
+      let greetingDescription=document.querySelector("#language");
+      greetingElement.textContent=greeting;
+  
+      if(language) {
+        greetingElement.lang=language;
+        greetingDescription.textContent="This is hello in " + languageNamesInEnglish.of(language) + ".";
+      } else {
+        greetingElement.lang="";
+        greetingDescription.textContent="";
+      }
+    }
+  
+    async function updateImage(greeting, locale) {
+      let url="https://source.unsplash.com/random?";
+      let keywords="space";
+      if(locale) {
+        languageNamesInLocale = new Intl.DisplayNames([locale], { type: 'language' });
+        keywords=languageNamesInLocale.of(locale);
+        keywords=keywords.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      }
+      url=url.concat(keywords);
+      const response = await fetch(url);
+      document.querySelector("html").style="background: url("+response.url+") no-repeat center center fixed;";
+      document.querySelector("#profile a").setAttribute("href", response.url);
+    }
+  
+    function greet(e) {
+      let node = getRandomNode();
+      let greeting=node.textContent;
+      let language=node.lang;
+      try {
+        updateImage(greeting, language);
+        updateGreeting(greeting, language);
+      } catch(err) {
+        console.log(err);
+      }
+    }
+  </script>
+  
   <body>
 
     <main class="page-content" aria-label="Content">
-    <div class="wrapper">
+    <div class="hello-wrapper">
       <div class="home">
         <h1 id="greeting">{{ page.title }}</h1>
         <aside id="language">{{ content }}</aside>
-        <ul>
+        <ul class="hidden">
           {% for emoji in site.data.greetings.emojis %}
           <li><p>{{ emoji }}</p></li>
           {% endfor %}

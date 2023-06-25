@@ -2,7 +2,7 @@
     padding: 0;
 }
 
-.wrapper {
+.hello-wrapper {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -43,7 +43,7 @@ body {
     background-color: transparent;
 }
 
-ul {
+ul .hidden {
     display: none;
 }
 
