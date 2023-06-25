@@ -17,16 +17,18 @@
     box-decoration-break: clone;
 }
 
-h1 {
+h1, aside {
     display: flex;
     justify-content: center;
-    font-size: 11vw;
     margin: 0;
+    text-shadow: .04em .04em .04em black, 0 0 .5em silver, 0 0 .2em whitesmoke;
+}
+
+h1 {
+    font-size: 11vw;
 }
 
 aside {
-    display: flex;
-    justify-content: center;
     font-size: 3vw;
 }
 
