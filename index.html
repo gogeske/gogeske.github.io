@@ -269,7 +269,8 @@
 
     <div class="terminal" id="terminal">
         <div class="terminal-header">Language Explorer</div>
-        <div class="terminal-line"><span class="terminal-prompt">Languages:</span>15 available</div>
+        <div class="terminal-line"><span class="terminal-prompt">Locations:</span>28 available (20 languages + 8
+            whimsical)</div>
         <div style="margin-top: 1.5rem;">
             <div class="terminal-line"><span class="terminal-prompt">Navigation:</span>Arrow keys, Space, or Click</div>
             <div class="terminal-line"><span class="terminal-prompt">Audio:</span>Click anywhere to repeat</div>
@@ -283,13 +284,68 @@
     </div>
 
     <script>
-        const locations = [
-            { lang: 'fr-FR', lang_name: 'French', location: 'Paris, France', image: 'https://images.unsplash.com/photo-1431274172761-fca41d930114?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', photographer: 'Fabien Maurin', photographerUrl: 'https://unsplash.com/@fabien_maurin', phrases: [{ text: 'Bonjour', meaning: 'Hello' }, { text: 'Salut', meaning: 'Hi' }] },
-            { lang: 'es-ES', lang_name: 'Spanish', location: 'Barcelona, Spain', image: 'https://images.unsplash.com/photo-1539037116277-4db20889f2d4?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', photographer: 'Toa Heftiba', photographerUrl: 'https://unsplash.com/@heftiba', phrases: [{ text: '¡Hola!', meaning: 'Hello!' }, { text: 'Buenos días', meaning: 'Good morning' }] },
-            { lang: 'ar-SA', lang_name: 'Arabic', location: 'Dubai, UAE', image: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', photographer: 'ZQ Lee', photographerUrl: 'https://unsplash.com/@zqlee', phrases: [{ text: 'مرحبا', meaning: 'Hello' }, { text: 'أهلا', meaning: 'Welcome' }] },
-            { lang: 'ja-JP', lang_name: 'Japanese', location: 'Tokyo, Japan', image: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', photographer: 'Tianshu Liu', photographerUrl: 'https://unsplash.com/@tianshu', phrases: [{ text: 'こんにちは', meaning: 'Hello' }, { text: 'おはよう', meaning: 'Good morning' }] },
-            { lang: 'en-US', lang_name: 'Universal', location: '🌍 Planet Earth', image: 'https://images.unsplash.com/photo-1446776653964-20c1d3a81b06?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', photographer: 'NASA', photographerUrl: 'https://unsplash.com/@nasa', phrases: [{ text: '👋' }, { text: '✌️' }] }
-        ];
+        // Unified data structure - keeping it simple and performant
+        const languageExplorer = {
+            // Country-based locations with language variations
+            countries: [
+                { lang: 'fr-FR', lang_name: 'French', location: 'Paris, France', image: 'https://images.unsplash.com/photo-1431274172761-fca41d930114?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', photographer: 'Fabien Maurin', photographerUrl: 'https://unsplash.com/@fabien_maurin', phrases: [{ text: 'Bonjour', meaning: 'Hello' }, { text: 'Salut', meaning: 'Hi' }] },
+                { lang: 'es-ES', lang_name: 'Spanish', location: 'Barcelona, Spain', image: 'https://images.unsplash.com/photo-1539037116277-4db20889f2d4?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', photographer: 'Toa Heftiba', photographerUrl: 'https://unsplash.com/@heftiba', phrases: [{ text: '¡Hola!', meaning: 'Hello!' }, { text: 'Buenos días', meaning: 'Good morning' }] },
+                { lang: 'es-MX', lang_name: 'Mexican Spanish', location: 'Mexico City, Mexico', image: 'https://images.unsplash.com/photo-1518105779142-d975f22f1b0a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', photographer: 'Jezael Melgoza', photographerUrl: 'https://unsplash.com/@jezar', phrases: [{ text: '¿Qué onda?', meaning: 'What\'s up?' }, { text: 'Órale', meaning: 'Wow/Cool' }] },
+                { lang: 'es-AR', lang_name: 'Argentinian Spanish', location: 'Buenos Aires, Argentina', image: 'https://images.unsplash.com/photo-1589909202802-8f4aadce1849?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', photographer: 'Nico Baum', photographerUrl: 'https://unsplash.com/@nbaum', phrases: [{ text: 'Che, ¿qué tal?', meaning: 'Hey, how\'s it going?' }, { text: '¿Cómo andás?', meaning: 'How are you?' }] },
+                { lang: 'ar-SA', lang_name: 'Arabic', location: 'Dubai, UAE', image: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', photographer: 'ZQ Lee', photographerUrl: 'https://unsplash.com/@zqlee', phrases: [{ text: 'مرحبا', meaning: 'Hello' }, { text: 'أهلا', meaning: 'Welcome' }] },
+                { lang: 'ja-JP', lang_name: 'Japanese', location: 'Tokyo, Japan', image: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', photographer: 'Tianshu Liu', photographerUrl: 'https://unsplash.com/@tianshu', phrases: [{ text: 'こんにちは', meaning: 'Hello' }, { text: 'おはよう', meaning: 'Good morning' }] },
+                { lang: 'pt-BR', lang_name: 'Portuguese', location: 'Rio de Janeiro, Brazil', image: 'https://images.unsplash.com/photo-1483729558449-99ef09a8c325?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', photographer: 'Raphael Nogueira', photographerUrl: 'https://unsplash.com/@phaelnogueira', phrases: [{ text: 'Olá', meaning: 'Hello' }, { text: 'Oi', meaning: 'Hi' }] },
+                { lang: 'nl-NL', lang_name: 'Dutch', location: 'Amsterdam, Netherlands', image: 'https://images.unsplash.com/photo-1534351590666-13e3e96b5017?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', photographer: 'Adrien Olichon', photographerUrl: 'https://unsplash.com/@adrienolichon', phrases: [{ text: 'Hallo', meaning: 'Hello' }, { text: 'Hoi', meaning: 'Hi' }] },
+                { lang: 'de-DE', lang_name: 'German', location: 'Berlin, Germany', image: 'https://images.unsplash.com/photo-1587330979470-3016b6702d89?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', photographer: 'Ingo Stiller', photographerUrl: 'https://unsplash.com/@ingostiller', phrases: [{ text: 'Hallo', meaning: 'Hello' }, { text: 'Guten Tag', meaning: 'Good day' }] },
+                { lang: 'it-IT', lang_name: 'Italian', location: 'Rome, Italy', image: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', photographer: 'Davi Costa', photographerUrl: 'https://unsplash.com/@davicosta', phrases: [{ text: 'Ciao', meaning: 'Hello/Bye' }, { text: 'Buongiorno', meaning: 'Good morning' }] },
+                { lang: 'ru-RU', lang_name: 'Russian', location: 'Moscow, Russia', image: 'https://images.unsplash.com/photo-1513326738677-b964603b136d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', photographer: 'Nikolay Vorobyev', photographerUrl: 'https://unsplash.com/@nikolayv', phrases: [{ text: 'Привет', meaning: 'Hello' }, { text: 'Здравствуйте', meaning: 'Hello (formal)' }] },
+                { lang: 'pl-PL', lang_name: 'Polish', location: 'Warsaw, Poland', image: 'https://images.unsplash.com/photo-1544984243-ec57ea16fe25?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', photographer: 'Jacek Dylag', photographerUrl: 'https://unsplash.com/@dylu', phrases: [{ text: 'Cześć', meaning: 'Hi' }, { text: 'Dzień dobry', meaning: 'Good day' }] },
+                { lang: 'tr-TR', lang_name: 'Turkish', location: 'Istanbul, Turkey', image: 'https://images.unsplash.com/photo-1541432901042-2d8bd64b4a9b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', photographer: 'Adli Wahid', photographerUrl: 'https://unsplash.com/@adliwahid', phrases: [{ text: 'Merhaba', meaning: 'Hello' }, { text: 'Selam', meaning: 'Hi' }] },
+                { lang: 'ko-KR', lang_name: 'Korean', location: 'Seoul, South Korea', image: 'https://images.unsplash.com/photo-1517154421773-0529f29ea451?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', photographer: 'Sven Mieke', photographerUrl: 'https://unsplash.com/@sxoxm', phrases: [{ text: '안녕하세요', meaning: 'Hello' }, { text: '안녕', meaning: 'Hi' }] },
+                { lang: 'hi-IN', lang_name: 'Hindi', location: 'Mumbai, India', image: 'https://images.unsplash.com/photo-1570168007204-dfb528c6958f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', photographer: 'Sonika Agarwal', photographerUrl: 'https://unsplash.com/@sonika_agarwal', phrases: [{ text: 'नमस्ते', meaning: 'Hello' }, { text: 'हैलो', meaning: 'Hello' }] },
+                { lang: 'zh-CN', lang_name: 'Chinese', location: 'Beijing, China', image: 'https://images.unsplash.com/photo-1508804185872-d7badad00f7d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', photographer: 'Theodor Lundqvist', photographerUrl: 'https://unsplash.com/@umbriferous', phrases: [{ text: '你好', meaning: 'Hello' }, { text: '您好', meaning: 'Hello (formal)' }] },
+                { lang: 'vi-VN', lang_name: 'Vietnamese', location: 'Ho Chi Minh City, Vietnam', image: 'https://images.unsplash.com/photo-1583417319070-4a69db38a482?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', photographer: 'Linh Pham', photographerUrl: 'https://unsplash.com/@linhmadebyhand', phrases: [{ text: 'Xin chào', meaning: 'Hello' }, { text: 'Chào bạn', meaning: 'Hi' }] },
+                { lang: 'id-ID', lang_name: 'Indonesian', location: 'Jakarta, Indonesia', image: 'https://images.unsplash.com/photo-1555212697-194d092e3b8f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', photographer: 'Afif Kusuma', photographerUrl: 'https://unsplash.com/@javaistan', phrases: [{ text: 'Halo', meaning: 'Hello' }, { text: 'Selamat pagi', meaning: 'Good morning' }] },
+                { lang: 'th-TH', lang_name: 'Thai', location: 'Bangkok, Thailand', image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', photographer: 'Sumit Chinchane', photographerUrl: 'https://unsplash.com/@sumitchinchane', phrases: [{ text: 'สวัสดี', meaning: 'Hello' }, { text: 'หวัดดี', meaning: 'Hi' }] }
+            ],
+
+            // Whimsical locations with thematic emoji collections
+            whimsical: [
+                { type: 'whimsical', lang_name: 'Universal', location: '🌍 Our Blue Planet', image: 'https://images.unsplash.com/photo-1614730321146-b6fa6a46bcb4?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', photographer: 'NASA', photographerUrl: 'https://unsplash.com/@nasa', phrases: [{ text: '🌍' }, { text: '🌎' }, { text: '🌏' }, { text: '✨' }, { text: '🌟' }, { text: '💫' }, { text: '🪐' }, { text: '🌌' }, { text: '🚀' }, { text: '👋' }] },
+                { type: 'whimsical', lang_name: 'Ocean', location: '🌊 Ocean Depths', image: 'https://images.unsplash.com/photo-1439066615861-d1af74d74000?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', photographer: 'Silas Baisch', photographerUrl: 'https://unsplash.com/@silasbaisch', phrases: [{ text: '🌊' }, { text: '🐋' }, { text: '🐠' }, { text: '🐙' }, { text: '🦈' }, { text: '🐚' }, { text: '💙' }, { text: '✨' }, { text: '🌀' }, { text: '👋' }] },
+                { type: 'whimsical', lang_name: 'Cosmic', location: '🌌 Cosmic Wonder', image: 'https://images.unsplash.com/photo-1446776877081-d282a0f896e2?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', photographer: 'NASA', photographerUrl: 'https://unsplash.com/@nasa', phrases: [{ text: '🌌' }, { text: '⭐' }, { text: '🌟' }, { text: '✨' }, { text: '💫' }, { text: '🪐' }, { text: '🌙' }, { text: '🚀' }, { text: '🛸' }, { text: '👋' }] },
+                { type: 'whimsical', lang_name: 'Mountains', location: '🏔️ Mountain Peaks', image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', photographer: 'Claudio Testa', photographerUrl: 'https://unsplash.com/@claudiotesta', phrases: [{ text: '🏔️' }, { text: '⛰️' }, { text: '🗻' }, { text: '🌄' }, { text: '🌅' }, { text: '❄️' }, { text: '✨' }, { text: '🦅' }, { text: '🌟' }, { text: '👋' }] },
+                { type: 'whimsical', lang_name: 'Nature', location: '🌸 Cherry Blossoms', image: 'https://images.unsplash.com/photo-1522383225653-ed111181a951?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', photographer: 'Sora Sagano', photographerUrl: 'https://unsplash.com/@sorasagano', phrases: [{ text: '🌸' }, { text: '🌺' }, { text: '🌷' }, { text: '🌻' }, { text: '🦋' }, { text: '🐝' }, { text: '✨' }, { text: '💖' }, { text: '🌿' }, { text: '👋' }] },
+                { type: 'whimsical', lang_name: 'Hope', location: '🌈 After the Storm', image: 'https://images.unsplash.com/photo-1419833479618-c595710ac50c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', photographer: 'Jeremy Bishop', photographerUrl: 'https://unsplash.com/@jeremybishop', phrases: [{ text: '🌈' }, { text: '⛈️' }, { text: '🌦️' }, { text: '☀️' }, { text: '✨' }, { text: '💎' }, { text: '🦄' }, { text: '💫' }, { text: '🌟' }, { text: '👋' }] },
+                { type: 'whimsical', lang_name: 'Aurora', location: '🔥 Aurora Dance', image: 'https://images.unsplash.com/photo-1531366936337-7c912a4589a7?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', photographer: 'Vincent Guth', photographerUrl: 'https://unsplash.com/@vinceguth', phrases: [{ text: '🔥' }, { text: '✨' }, { text: '🌌' }, { text: '💚' }, { text: '💙' }, { text: '💜' }, { text: '🌟' }, { text: '❄️' }, { text: '🏔️' }, { text: '👋' }] },
+                { type: 'whimsical', lang_name: 'Wildlife', location: '🐾 Wildlife Wonder', image: 'https://images.unsplash.com/photo-1516426122078-c23e76319801?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', photographer: 'Hu Chen', photographerUrl: 'https://unsplash.com/@huchenme', phrases: [{ text: '🐾' }, { text: '🦁' }, { text: '🐘' }, { text: '🦒' }, { text: '🦓' }, { text: '🐆' }, { text: '🦅' }, { text: '🌍' }, { text: '✨' }, { text: '👋' }] }
+            ]
+        };
+
+        // Cache locations array for performance
+        const allLocations = [...languageExplorer.countries, ...languageExplorer.whimsical];
+
+        // Cache voices for performance
+        let cachedVoices = [];
+
+        // Simple helper functions for backward compatibility
+        function getAllLocations() {
+            return allLocations;
+        }
+
+        function isWhimsicalLocation(location) {
+            return location.type === 'whimsical';
+        }
+
+        // Cache voices when available
+        function updateVoicesCache() {
+            if ('speechSynthesis' in window) {
+                cachedVoices = speechSynthesis.getVoices();
+            }
+        }
+
+        // Cache DOM elements for performance
+        let locationBubble, locationName, detailSentence1, detailSentence2, photoCredit, photographerLink;
 
         let currentLocation = null;
         let currentPhraseIndex = 0;
@@ -301,8 +357,8 @@
             if (!currentLocation) return;
 
             const phrase = currentLocation.phrases[currentPhraseIndex];
-            const isRTL = currentLocation.lang.startsWith('ar');
-            const isEmoji = currentLocation.location.includes('🌍');
+            const isRTL = currentLocation.lang && currentLocation.lang.startsWith('ar');
+            const isWhimsical = isWhimsicalLocation(currentLocation);
 
             // Update background
             document.body.style.backgroundImage = `url('${currentLocation.image}')`;
@@ -311,7 +367,7 @@
 
             // Update location bubble
             const locationBubble = document.getElementById('location-bubble');
-            if (isEmoji) {
+            if (isWhimsical) {
                 locationBubble.style.display = 'none';
             } else {
                 locationBubble.style.display = 'block';
@@ -353,7 +409,8 @@
         function getRandomPhrase() {
             speechSynthesis.cancel();
 
-            currentLocation = locations[Math.floor(Math.random() * locations.length)];
+            const allLocations = getAllLocations();
+            currentLocation = allLocations[Math.floor(Math.random() * allLocations.length)];
             currentPhraseIndex = Math.floor(Math.random() * currentLocation.phrases.length);
             updateAll();
             setTimeout(() => speakPhrase(), 200);
@@ -375,7 +432,7 @@
                 flyingText.innerHTML = `<div>${phrase.text}</div><div style="font-size: 0.8em; opacity: 0.9;">${phrase.meaning}</div>`;
             }
 
-            const isRTL = currentLocation.lang.startsWith('ar');
+            const isRTL = currentLocation.lang && currentLocation.lang.startsWith('ar');
             if (isRTL) {
                 flyingText.style.top = '20%';
                 flyingText.style.right = '5%';
@@ -396,18 +453,18 @@
 
             setTimeout(() => flyingText.remove(), 3000);
 
-            // Speak if not emoji
-            if (!isEmoji && 'speechSynthesis' in window) {
+            // Speak if not emoji and has language
+            if (!isEmoji && currentLocation.lang && 'speechSynthesis' in window) {
                 audioPlaying = true;
                 const utterance = new SpeechSynthesisUtterance(phrase.text);
                 utterance.lang = currentLocation.lang;
                 utterance.rate = 1.0;
 
-                // Find the best voice for the language
-                const voices = speechSynthesis.getVoices();
+                // Find the best voice for the language using cached voices
+                if (cachedVoices.length === 0) updateVoicesCache();
                 const langCode = currentLocation.lang.split('-')[0];
-                const exactMatch = voices.find(voice => voice.lang === currentLocation.lang);
-                const langMatch = voices.find(voice => voice.lang.startsWith(langCode));
+                const exactMatch = cachedVoices.find(voice => voice.lang === currentLocation.lang);
+                const langMatch = cachedVoices.find(voice => voice.lang.startsWith(langCode));
 
                 if (exactMatch) {
                     utterance.voice = exactMatch;
@@ -472,6 +529,18 @@
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
+            // Cache DOM elements for performance
+            locationBubble = document.getElementById('location-bubble');
+            locationName = document.getElementById('location-name');
+            detailSentence1 = document.getElementById('detail-sentence1');
+            detailSentence2 = document.getElementById('detail-sentence2');
+            photoCredit = document.getElementById('photo-credit');
+            photographerLink = document.getElementById('photographer-link');
+
+            // Initialize voice cache
+            updateVoicesCache();
+
+            // Start the experience
             getRandomPhrase();
         });
     </script>
