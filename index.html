@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hello World - Geske Family</title>
+    <meta name="description"
+        content="A delightful journey through greetings from around the world. Discover how to say hello in different languages with beautiful imagery and native pronunciation.">
+    <meta name="keywords" content="hello, greetings, languages, world, family, travel, culture">
+    <meta name="author" content="Daniel & Stephanie Geske">
+    <meta property="og:title" content="Hello World - Geske Family">
+    <meta property="og:description" content="A delightful journey through greetings from around the world">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://gogeske.com">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Hello World - Geske Family">
+    <meta name="twitter:description" content="A delightful journey through greetings from around the world">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            min-height: 100vh;
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-image 0.6s ease;
+        }
+
+        .language-explorer {
+            width: 100%;
+            max-width: 500px;
+            padding: 2rem;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .content-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+
+        .phrase-text {
+            font-size: 3rem;
+            color: white;
+            font-weight: 300;
+            margin-bottom: 0.5rem;
+            line-height: 1.2;
+        }
+
+        .phrase-meaning {
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .ui-element {
+            position: fixed;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            backdrop-filter: blur(20px) saturate(180%);
+            border: 0.5px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+
+        .location-bubble {
+            top: 1rem;
+            left: 1rem;
+            text-align: left;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .location-bubble.expanded {
+            padding: 1rem 1.5rem;
+            font-size: 0.9rem;
+            transform: scale(1.1);
+        }
+
+        .photo-credit {
+            bottom: 1rem;
+            left: 1rem;
+            text-align: left;
+        }
+
+        .photo-credit a {
+            color: white;
+            text-decoration: none;
+        }
+
+        .details {
+            margin-top: 0.5rem;
+            opacity: 0;
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .details.show {
+            opacity: 1;
+            max-height: 200px;
+        }
+
+        .detail-line {
+            margin: 0.3rem 0;
+            font-size: 0.8rem;
+        }
+
+        .detail-label {
+            opacity: 0.7;
+            margin-right: 0.5rem;
+        }
+
+        .terminal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            width: 80vw;
+            max-width: 600px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px) saturate(180%);
+            border: 0.5px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border-radius: 20px;
+            z-index: 3000;
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.1, 0.1, 0.9, 1);
+            padding: 2rem;
+        }
+
+        .terminal.show {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .terminal-header {
+            color: white;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .terminal-line {
+            margin-bottom: 0.5rem;
+            display: flex;
+            color: white;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        .terminal-prompt {
+            color: rgba(255, 255, 255, 0.7);
+            font-weight: 500;
+            margin-right: 0.5rem;
+        }
+
+        .flying-text {
+            position: fixed;
+            color: white;
+            font-weight: 300;
+            text-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+            pointer-events: none;
+            z-index: 2000;
+            white-space: nowrap;
+        }
+
+        @keyframes flyThrough {
+            0% {
+                font-size: 2rem;
+                opacity: 0;
+            }
+
+            15% {
+                opacity: 1;
+                font-size: 3rem;
+            }
+
+            60% {
+                opacity: 1;
+                font-size: 6rem;
+            }
+
+            85% {
+                opacity: 1;
+                font-size: 100rem;
+            }
+
+            100% {
+                font-size: 160rem;
+                opacity: 0;
+            }
+        }
+
+        @keyframes flyThroughRotate {
+            0% {
+                font-size: 2rem;
+                opacity: 0;
+                transform: rotate(0deg);
+            }
+
+            15% {
+                opacity: 1;
+                font-size: 3rem;
+                transform: rotate(45deg);
+            }
+
+            60% {
+                opacity: 1;
+                font-size: 6rem;
+                transform: rotate(180deg);
+            }
+
+            85% {
+                opacity: 1;
+                font-size: 100rem;
+                transform: rotate(540deg);
+            }
+
+            100% {
+                font-size: 160rem;
+                opacity: 0;
+                transform: rotate(720deg);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .phrase-text {
+                font-size: 2.5rem;
+            }
+
+            .terminal {
+                width: 95vw;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+
+    <div class="ui-element location-bubble" id="location-bubble">
+        <div id="location-name"></div>
+        <div class="details" id="details">
+            <div id="detail-sentence1"></div>
+            <div id="detail-sentence2"></div>
+        </div>
+    </div>
+
+    <div class="ui-element photo-credit" id="photo-credit">
+        Photo by <a href="#" id="photographer-link"></a> on <a href="https://unsplash.com" target="_blank">Unsplash</a>
+    </div>
+
+    <div class="terminal" id="terminal">
+        <div class="terminal-header">Language Explorer</div>
+        <div class="terminal-line"><span class="terminal-prompt">Languages:</span>15 available</div>
+        <div style="margin-top: 1.5rem;">
+            <div class="terminal-line"><span class="terminal-prompt">Navigation:</span>Arrow keys, Space, or Click</div>
+            <div class="terminal-line"><span class="terminal-prompt">Audio:</span>Click anywhere to repeat</div>
+            <div class="terminal-line"><span class="terminal-prompt">Help:</span>Press ? to toggle this terminal</div>
+            <div class="terminal-line"><span class="terminal-prompt">Location:</span>Press . to show/hide location info
+            </div>
+            <div class="terminal-line"><span class="terminal-prompt">LinkedIn:</span>Press D for Daniel, S for Stephanie
+            </div>
+            <div class="terminal-line"><span class="terminal-prompt">Links:</span>Press I for iCloud</div>
+        </div>
+    </div>
+
+    <script>
+        const locations = [
+            { lang: 'fr-FR', lang_name: 'French', location: 'Paris, France', image: 'https://images.unsplash.com/photo-1431274172761-fca41d930114?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', photographer: 'Fabien Maurin', photographerUrl: 'https://unsplash.com/@fabien_maurin', phrases: [{ text: 'Bonjour', meaning: 'Hello' }, { text: 'Salut', meaning: 'Hi' }] },
+            { lang: 'es-ES', lang_name: 'Spanish', location: 'Barcelona, Spain', image: 'https://images.unsplash.com/photo-1539037116277-4db20889f2d4?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', photographer: 'Toa Heftiba', photographerUrl: 'https://unsplash.com/@heftiba', phrases: [{ text: '¡Hola!', meaning: 'Hello!' }, { text: 'Buenos días', meaning: 'Good morning' }] },
+            { lang: 'ar-SA', lang_name: 'Arabic', location: 'Dubai, UAE', image: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', photographer: 'ZQ Lee', photographerUrl: 'https://unsplash.com/@zqlee', phrases: [{ text: 'مرحبا', meaning: 'Hello' }, { text: 'أهلا', meaning: 'Welcome' }] },
+            { lang: 'ja-JP', lang_name: 'Japanese', location: 'Tokyo, Japan', image: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', photographer: 'Tianshu Liu', photographerUrl: 'https://unsplash.com/@tianshu', phrases: [{ text: 'こんにちは', meaning: 'Hello' }, { text: 'おはよう', meaning: 'Good morning' }] },
+            { lang: 'en-US', lang_name: 'Universal', location: '🌍 Planet Earth', image: 'https://images.unsplash.com/photo-1446776653964-20c1d3a81b06?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', photographer: 'NASA', photographerUrl: 'https://unsplash.com/@nasa', phrases: [{ text: '👋' }, { text: '✌️' }] }
+        ];
+
+        let currentLocation = null;
+        let currentPhraseIndex = 0;
+        let terminalVisible = false;
+        let detailsVisible = false;
+        let audioPlaying = false;
+
+        function updateAll() {
+            if (!currentLocation) return;
+
+            const phrase = currentLocation.phrases[currentPhraseIndex];
+            const isRTL = currentLocation.lang.startsWith('ar');
+            const isEmoji = currentLocation.location.includes('🌍');
+
+            // Update background
+            document.body.style.backgroundImage = `url('${currentLocation.image}')`;
+
+            // No center overlay to update anymore
+
+            // Update location bubble
+            const locationBubble = document.getElementById('location-bubble');
+            if (isEmoji) {
+                locationBubble.style.display = 'none';
+            } else {
+                locationBubble.style.display = 'block';
+                document.getElementById('location-name').textContent = currentLocation.location;
+
+                // Position based on language direction
+                if (isRTL) {
+                    locationBubble.style.left = 'auto';
+                    locationBubble.style.right = '1rem';
+                    locationBubble.style.textAlign = 'right';
+                } else {
+                    locationBubble.style.right = 'auto';
+                    locationBubble.style.left = '1rem';
+                    locationBubble.style.textAlign = 'left';
+                }
+
+                // Update details if visible
+                if (detailsVisible) {
+                    document.getElementById('detail-sentence1').textContent = `In ${currentLocation.location}, the language is ${currentLocation.lang_name}.`;
+                    document.getElementById('detail-sentence2').textContent = `"${phrase.text}" means ${phrase.meaning || 'N/A'}.`;
+                }
+            }
+
+            // Update photo credit
+            const photoCredit = document.getElementById('photo-credit');
+            if (isRTL) {
+                photoCredit.style.left = 'auto';
+                photoCredit.style.right = '1rem';
+                photoCredit.style.textAlign = 'right';
+            } else {
+                photoCredit.style.right = 'auto';
+                photoCredit.style.left = '1rem';
+                photoCredit.style.textAlign = 'left';
+            }
+            document.getElementById('photographer-link').textContent = currentLocation.photographer;
+            document.getElementById('photographer-link').href = currentLocation.photographerUrl;
+        }
+
+        function getRandomPhrase() {
+            speechSynthesis.cancel();
+
+            currentLocation = locations[Math.floor(Math.random() * locations.length)];
+            currentPhraseIndex = Math.floor(Math.random() * currentLocation.phrases.length);
+            updateAll();
+            setTimeout(() => speakPhrase(), 200);
+        }
+
+        function speakPhrase() {
+            if (!currentLocation || audioPlaying) return;
+
+            const phrase = currentLocation.phrases[currentPhraseIndex];
+            const isEmoji = /^[\u{1F000}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]+$/u.test(phrase.text);
+
+            // Create flying text
+            const flyingText = document.createElement('div');
+            flyingText.className = 'flying-text';
+
+            if (isEmoji || !phrase.meaning) {
+                flyingText.textContent = phrase.text;
+            } else {
+                flyingText.innerHTML = `<div>${phrase.text}</div><div style="font-size: 0.8em; opacity: 0.9;">${phrase.meaning}</div>`;
+            }
+
+            const isRTL = currentLocation.lang.startsWith('ar');
+            if (isRTL) {
+                flyingText.style.top = '20%';
+                flyingText.style.right = '5%';
+                flyingText.style.textAlign = 'right';
+            } else {
+                flyingText.style.top = '20%';
+                flyingText.style.left = '5%';
+                flyingText.style.textAlign = 'left';
+            }
+
+            document.body.appendChild(flyingText);
+
+            setTimeout(() => {
+                flyingText.style.animation = isEmoji ?
+                    'flyThroughRotate 2.5s cubic-bezier(0.1, 0.1, 0.9, 1) forwards' :
+                    'flyThrough 2.5s cubic-bezier(0.1, 0.1, 0.9, 1) forwards';
+            }, 50);
+
+            setTimeout(() => flyingText.remove(), 3000);
+
+            // Speak if not emoji
+            if (!isEmoji && 'speechSynthesis' in window) {
+                audioPlaying = true;
+                const utterance = new SpeechSynthesisUtterance(phrase.text);
+                utterance.lang = currentLocation.lang;
+                utterance.rate = 1.0;
+
+                // Find the best voice for the language
+                const voices = speechSynthesis.getVoices();
+                const langCode = currentLocation.lang.split('-')[0];
+                const exactMatch = voices.find(voice => voice.lang === currentLocation.lang);
+                const langMatch = voices.find(voice => voice.lang.startsWith(langCode));
+
+                if (exactMatch) {
+                    utterance.voice = exactMatch;
+                } else if (langMatch) {
+                    utterance.voice = langMatch;
+                }
+
+                utterance.onend = () => audioPlaying = false;
+                utterance.onerror = () => audioPlaying = false;
+                speechSynthesis.speak(utterance);
+            }
+        }
+
+        function toggleDetails() {
+            detailsVisible = !detailsVisible;
+            const bubble = document.getElementById('location-bubble');
+            const details = document.getElementById('details');
+
+            if (detailsVisible) {
+                bubble.classList.add('expanded');
+                details.classList.add('show');
+                updateAll(); // Refresh details
+            } else {
+                bubble.classList.remove('expanded');
+                details.classList.remove('show');
+            }
+        }
+
+        function toggleTerminal() {
+            terminalVisible = !terminalVisible;
+            const terminal = document.getElementById('terminal');
+            terminal.classList.toggle('show', terminalVisible);
+        }
+
+        // Event listeners
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === 'ArrowLeft' || e.key === ' ') {
+                e.preventDefault();
+                getRandomPhrase();
+            } else if (e.key === '?') {
+                e.preventDefault();
+                toggleTerminal();
+            } else if (e.key === '.') {
+                e.preventDefault();
+                toggleDetails();
+            } else if (e.key === 'd' || e.key === 'D') {
+                e.preventDefault();
+                window.open('https://www.linkedin.com/in/dgeske/', '_blank');
+            } else if (e.key === 's' || e.key === 'S') {
+                e.preventDefault();
+                window.open('https://www.linkedin.com/in/stephanie-geske-7185014/', '_blank');
+            } else if (e.key === 'i' || e.key === 'I') {
+                e.preventDefault();
+                window.open('http://icloud.com', '_blank');
+            }
+        });
+
+        document.body.addEventListener('click', (e) => {
+            if (e.target.tagName === 'A' || e.target.closest('.terminal')) return;
+            speakPhrase();
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            getRandomPhrase();
+        });
+    </script>
+</body>
+
+</html>
