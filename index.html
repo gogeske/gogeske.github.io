@@ -89,7 +89,9 @@
         .location-bubble.expanded {
             padding: 1rem 1.5rem;
             font-size: 0.9rem;
-            transform: scale(1.1);
+            transform-origin: top left;
+            min-width: 280px;
+            margin-left: 0.5rem;
         }
 
         .photo-credit {
@@ -316,7 +318,7 @@
                 { type: 'whimsical', lang_name: 'Cosmic', location: '🌌 Cosmic Wonder', image: 'https://images.unsplash.com/photo-1446776877081-d282a0f896e2?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', photographer: 'NASA', photographerUrl: 'https://unsplash.com/@nasa', phrases: [{ text: '🌌' }, { text: '⭐' }, { text: '🌟' }, { text: '✨' }, { text: '💫' }, { text: '🪐' }, { text: '🌙' }, { text: '🚀' }, { text: '🛸' }, { text: '👋' }] },
                 { type: 'whimsical', lang_name: 'Mountains', location: '🏔️ Mountain Peaks', image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', photographer: 'Claudio Testa', photographerUrl: 'https://unsplash.com/@claudiotesta', phrases: [{ text: '🏔️' }, { text: '⛰️' }, { text: '🗻' }, { text: '🌄' }, { text: '🌅' }, { text: '❄️' }, { text: '✨' }, { text: '🦅' }, { text: '🌟' }, { text: '👋' }] },
                 { type: 'whimsical', lang_name: 'Nature', location: '🌸 Cherry Blossoms', image: 'https://images.unsplash.com/photo-1522383225653-ed111181a951?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', photographer: 'Sora Sagano', photographerUrl: 'https://unsplash.com/@sorasagano', phrases: [{ text: '🌸' }, { text: '🌺' }, { text: '🌷' }, { text: '🌻' }, { text: '🦋' }, { text: '🐝' }, { text: '✨' }, { text: '💖' }, { text: '🌿' }, { text: '👋' }] },
-                { type: 'whimsical', lang_name: 'Hope', location: '🌈 After the Storm', image: 'https://images.unsplash.com/photo-1419833479618-c595710ac50c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', photographer: 'Jeremy Bishop', photographerUrl: 'https://unsplash.com/@jeremybishop', phrases: [{ text: '🌈' }, { text: '⛈️' }, { text: '🌦️' }, { text: '☀️' }, { text: '✨' }, { text: '💎' }, { text: '🦄' }, { text: '💫' }, { text: '🌟' }, { text: '👋' }] },
+                { type: 'whimsical', lang_name: 'Hope', location: '🌈 After the Storm', image: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', photographer: 'Sergey Pesterev', photographerUrl: 'https://unsplash.com/@sickle', phrases: [{ text: '🌈' }, { text: '⛈️' }, { text: '🌦️' }, { text: '☀️' }, { text: '✨' }, { text: '💎' }, { text: '🦄' }, { text: '💫' }, { text: '🌟' }, { text: '👋' }] },
                 { type: 'whimsical', lang_name: 'Aurora', location: '🔥 Aurora Dance', image: 'https://images.unsplash.com/photo-1531366936337-7c912a4589a7?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', photographer: 'Vincent Guth', photographerUrl: 'https://unsplash.com/@vinceguth', phrases: [{ text: '🔥' }, { text: '✨' }, { text: '🌌' }, { text: '💚' }, { text: '💙' }, { text: '💜' }, { text: '🌟' }, { text: '❄️' }, { text: '🏔️' }, { text: '👋' }] },
                 { type: 'whimsical', lang_name: 'Wildlife', location: '🐾 Wildlife Wonder', image: 'https://images.unsplash.com/photo-1516426122078-c23e76319801?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', photographer: 'Hu Chen', photographerUrl: 'https://unsplash.com/@huchenme', phrases: [{ text: '🐾' }, { text: '🦁' }, { text: '🐘' }, { text: '🦒' }, { text: '🦓' }, { text: '🐆' }, { text: '🦅' }, { text: '🌍' }, { text: '✨' }, { text: '👋' }] }
             ]
@@ -328,10 +330,7 @@
         // Cache voices for performance
         let cachedVoices = [];
 
-        // Simple helper functions for backward compatibility
-        function getAllLocations() {
-            return allLocations;
-        }
+        // Simple helper function for backward compatibility
 
         function isWhimsicalLocation(location) {
             return location.type === 'whimsical';
@@ -366,12 +365,11 @@
             // No center overlay to update anymore
 
             // Update location bubble
-            const locationBubble = document.getElementById('location-bubble');
             if (isWhimsical) {
                 locationBubble.style.display = 'none';
             } else {
                 locationBubble.style.display = 'block';
-                document.getElementById('location-name').textContent = currentLocation.location;
+                locationName.textContent = currentLocation.location;
 
                 // Position based on language direction
                 if (isRTL) {
@@ -386,13 +384,12 @@
 
                 // Update details if visible
                 if (detailsVisible) {
-                    document.getElementById('detail-sentence1').textContent = `In ${currentLocation.location}, the language is ${currentLocation.lang_name}.`;
-                    document.getElementById('detail-sentence2').textContent = `"${phrase.text}" means ${phrase.meaning || 'N/A'}.`;
+                    detailSentence1.textContent = `In ${currentLocation.location}, the language is ${currentLocation.lang_name}.`;
+                    detailSentence2.textContent = `"${phrase.text}" means ${phrase.meaning || 'N/A'}.`;
                 }
             }
 
             // Update photo credit
-            const photoCredit = document.getElementById('photo-credit');
             if (isRTL) {
                 photoCredit.style.left = 'auto';
                 photoCredit.style.right = '1rem';
@@ -402,16 +399,22 @@
                 photoCredit.style.left = '1rem';
                 photoCredit.style.textAlign = 'left';
             }
-            document.getElementById('photographer-link').textContent = currentLocation.photographer;
-            document.getElementById('photographer-link').href = currentLocation.photographerUrl;
+            photographerLink.textContent = currentLocation.photographer;
+            photographerLink.href = currentLocation.photographerUrl;
         }
 
         function getRandomPhrase() {
             speechSynthesis.cancel();
 
-            const allLocations = getAllLocations();
             currentLocation = allLocations[Math.floor(Math.random() * allLocations.length)];
-            currentPhraseIndex = Math.floor(Math.random() * currentLocation.phrases.length);
+
+            // Always pick a different phrase/emoji from the selected location
+            let newPhraseIndex;
+            do {
+                newPhraseIndex = Math.floor(Math.random() * currentLocation.phrases.length);
+            } while (newPhraseIndex === currentPhraseIndex && currentLocation.phrases.length > 1);
+            currentPhraseIndex = newPhraseIndex;
+
             updateAll();
             setTimeout(() => speakPhrase(), 200);
         }
@@ -435,10 +438,10 @@
             // Random starting position around window edges
             const edge = Math.floor(Math.random() * 4); // 0=top, 1=right, 2=bottom, 3=left
             const position = Math.random() * 80 + 10; // 10% to 90% along the edge
-            
+
             const isRTL = currentLocation.lang && currentLocation.lang.startsWith('ar');
-            
-            switch(edge) {
+
+            switch (edge) {
                 case 0: // Top edge
                     flyingText.style.top = '5%';
                     flyingText.style.left = position + '%';
@@ -460,7 +463,7 @@
                     flyingText.style.textAlign = 'left';
                     break;
             }
-            
+
             // Override text alignment for RTL languages
             if (isRTL) {
                 flyingText.style.textAlign = 'right';
@@ -503,15 +506,14 @@
 
         function toggleDetails() {
             detailsVisible = !detailsVisible;
-            const bubble = document.getElementById('location-bubble');
             const details = document.getElementById('details');
 
             if (detailsVisible) {
-                bubble.classList.add('expanded');
+                locationBubble.classList.add('expanded');
                 details.classList.add('show');
                 updateAll(); // Refresh details
             } else {
-                bubble.classList.remove('expanded');
+                locationBubble.classList.remove('expanded');
                 details.classList.remove('show');
             }
         }
@@ -547,6 +549,13 @@
 
         document.body.addEventListener('click', (e) => {
             if (e.target.tagName === 'A' || e.target.closest('.terminal')) return;
+
+            // Check if click is on location bubble
+            if (e.target.closest('.location-bubble')) {
+                toggleDetails();
+                return;
+            }
+
             speakPhrase();
         });
 
