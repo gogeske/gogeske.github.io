@@ -432,15 +432,38 @@
                 flyingText.innerHTML = `<div>${phrase.text}</div><div style="font-size: 0.8em; opacity: 0.9;">${phrase.meaning}</div>`;
             }
 
+            // Random starting position around window edges
+            const edge = Math.floor(Math.random() * 4); // 0=top, 1=right, 2=bottom, 3=left
+            const position = Math.random() * 80 + 10; // 10% to 90% along the edge
+            
             const isRTL = currentLocation.lang && currentLocation.lang.startsWith('ar');
+            
+            switch(edge) {
+                case 0: // Top edge
+                    flyingText.style.top = '5%';
+                    flyingText.style.left = position + '%';
+                    flyingText.style.textAlign = 'center';
+                    break;
+                case 1: // Right edge
+                    flyingText.style.top = position + '%';
+                    flyingText.style.right = '5%';
+                    flyingText.style.textAlign = 'right';
+                    break;
+                case 2: // Bottom edge
+                    flyingText.style.bottom = '5%';
+                    flyingText.style.left = position + '%';
+                    flyingText.style.textAlign = 'center';
+                    break;
+                case 3: // Left edge
+                    flyingText.style.top = position + '%';
+                    flyingText.style.left = '5%';
+                    flyingText.style.textAlign = 'left';
+                    break;
+            }
+            
+            // Override text alignment for RTL languages
             if (isRTL) {
-                flyingText.style.top = '20%';
-                flyingText.style.right = '5%';
                 flyingText.style.textAlign = 'right';
-            } else {
-                flyingText.style.top = '20%';
-                flyingText.style.left = '5%';
-                flyingText.style.textAlign = 'left';
             }
 
             document.body.appendChild(flyingText);
