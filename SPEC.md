@@ -38,6 +38,13 @@
 - ✅ Browser testing integration
 - ✅ Two modes: quick commit vs full testing
 
+## Design Rules (Keep It Simple)
+
+**Typography:** System fonts (-apple-system, BlinkMacSystemFont)  
+**Colors:** White text, rgba(255,255,255,0.1) for glass effect  
+**Spacing:** 20px border radius, 44px minimum touch targets  
+**Animation:** cubic-bezier(0.1, 0.1, 0.9, 1) for smooth feel  
+
 ## Current Architecture (Simple)
 
 **Core Files (6 total):**
