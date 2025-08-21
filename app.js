@@ -607,8 +607,6 @@ function toggleTerminal() {
     const terminal = document.getElementById('terminal');
     const terminalDialog = document.getElementById('terminal-dialog');
 
-    console.log('Toggle terminal:', terminalVisible, terminal, terminalDialog); // Debug
-
     if (terminalVisible) {
         if (terminal) terminal.classList.add('show');
         if (terminalDialog) terminalDialog.setAttribute('aria-hidden', 'false');
@@ -642,7 +640,6 @@ document.addEventListener('keydown', (e) => {
         goBackInHistory();
     } else if (e.key === '?' || e.key === 'h' || e.key === 'H') {
         e.preventDefault();
-        console.log('Help key pressed:', e.key); // Debug log
         toggleTerminal();
     } else if (e.key === '.') {
         e.preventDefault();
