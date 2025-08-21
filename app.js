@@ -191,42 +191,23 @@ function showLoadingState() {
     document.body.style.filter = 'blur(2px)';
     document.body.style.transition = 'filter 0.3s ease';
     
-    // Add loading indicator
+    // Create loading indicator with proper DOM manipulation
     const loadingIndicator = document.createElement('div');
     loadingIndicator.id = 'loading-indicator';
-    loadingIndicator.innerHTML = `
-        <div style="
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 1rem 2rem;
-            border-radius: 8px;
-            font-size: 1.1rem;
-            z-index: 10000;
-            backdrop-filter: blur(10px);
-        ">
-            <div style="display: flex; align-items: center; gap: 0.5rem;">
-                <div style="
-                    width: 20px;
-                    height: 20px;
-                    border: 2px solid #ffffff40;
-                    border-top: 2px solid white;
-                    border-radius: 50%;
-                    animation: spin 1s linear infinite;
-                "></div>
-                Loading next location...
-            </div>
-        </div>
-        <style>
-            @keyframes spin {
-                0% { transform: rotate(0deg); }
-                100% { transform: rotate(360deg); }
-            }
-        </style>
-    `;
+    loadingIndicator.className = 'loading-overlay';
+    
+    const content = document.createElement('div');
+    content.className = 'loading-content';
+    
+    const spinner = document.createElement('div');
+    spinner.className = 'loading-spinner';
+    
+    const text = document.createElement('span');
+    text.textContent = 'Loading next location...';
+    
+    content.appendChild(spinner);
+    content.appendChild(text);
+    loadingIndicator.appendChild(content);
     document.body.appendChild(loadingIndicator);
 }
 
@@ -681,15 +662,30 @@ document.addEventListener('DOMContentLoaded', () => {
         // Add mobile-specific instructions to terminal
         const terminal = document.getElementById('terminal');
         if (terminal) {
-            const mobileInstructions = document.createElement('div');
-            mobileInstructions.innerHTML = `
-                <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.2);">
-                    <div class="terminal-line"><span class="terminal-prompt">Mobile:</span>Swipe left/right for new phrases</div>
-                    <div class="terminal-line"><span class="terminal-prompt">Gestures:</span>Swipe up for help, down to close</div>
-                    <div class="terminal-line"><span class="terminal-prompt">Long press:</span>Repeat current phrase</div>
-                </div>
-            `;
-            terminal.appendChild(mobileInstructions);
+            const mobileSection = document.createElement('div');
+            mobileSection.className = 'mobile-instructions';
+            
+            // Create mobile instruction lines
+            const instructions = [
+                { prompt: 'Mobile:', text: 'Swipe left/right for new phrases' },
+                { prompt: 'Gestures:', text: 'Swipe up for help, down to close' },
+                { prompt: 'Long press:', text: 'Repeat current phrase' }
+            ];
+            
+            instructions.forEach(instruction => {
+                const line = document.createElement('div');
+                line.className = 'terminal-line';
+                
+                const prompt = document.createElement('span');
+                prompt.className = 'terminal-prompt';
+                prompt.textContent = instruction.prompt;
+                
+                line.appendChild(prompt);
+                line.appendChild(document.createTextNode(instruction.text));
+                mobileSection.appendChild(line);
+            });
+            
+            terminal.appendChild(mobileSection);
         }
     }
 
