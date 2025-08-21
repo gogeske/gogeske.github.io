@@ -16,6 +16,19 @@ fi
 
 # Always do basic checks
 echo "🔍 Basic checks..."
+
+# Syntax check with Node.js
+if command -v node >/dev/null 2>&1; then
+    if ! node -c app.js 2>/dev/null; then
+        echo "❌ JavaScript syntax error in app.js"
+        exit 1
+    fi
+    echo "✅ JavaScript syntax OK"
+else
+    echo "⚠️  Node.js not available, skipping syntax check"
+fi
+
+# Structure checks
 if ! grep -q "languageExplorer" app.js; then
     echo "❌ Missing languageExplorer object"
     exit 1
@@ -25,6 +38,13 @@ if ! grep -q "<!DOCTYPE html>" index.html; then
     echo "❌ Missing DOCTYPE in index.html"
     exit 1
 fi
+
+if ! grep -q "styles.css" index.html; then
+    echo "❌ CSS not linked in index.html"
+    exit 1
+fi
+
+echo "✅ Structure checks passed"
 
 # Full testing if requested
 if [ "$FULL_TEST" = true ]; then
