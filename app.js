@@ -122,6 +122,81 @@ let isLoading = false;
 let currentLocationIndex = 0;
 let allLocations = [];
 
+// History system for navigation
+let locationHistory = [];
+let historyIndex = -1;
+
+// History management functions
+function addToHistory(location, locationIndex, phraseIndex) {
+    // If we're not at the end of history, truncate everything after current position
+    if (historyIndex < locationHistory.length - 1) {
+        locationHistory = locationHistory.slice(0, historyIndex + 1);
+    }
+    
+    // Add new entry
+    locationHistory.push({
+        location: location,
+        locationIndex: locationIndex,
+        phraseIndex: phraseIndex
+    });
+    
+    // Keep history reasonable size (last 20 items)
+    if (locationHistory.length > 20) {
+        locationHistory.shift();
+    } else {
+        historyIndex++;
+    }
+}
+
+function goBackInHistory() {
+    if (historyIndex <= 0) {
+        // No history to go back to, just get a random phrase
+        getRandomPhrase();
+        return;
+    }
+    
+    speechSynthesis.cancel();
+    historyIndex--;
+    const historyItem = locationHistory[historyIndex];
+    
+    // Show loading state if image isn't preloaded
+    const imageUrl = getResponsiveImageUrl(historyItem.location.image);
+    if (!preloadedImages.has(historyItem.location.image) && !imageCache.has(imageUrl)) {
+        showLoadingState();
+    }
+    
+    // Restore from history
+    preloadImage(historyItem.location.image).then(() => {
+        currentLocation = historyItem.location;
+        currentLocationIndex = historyItem.locationIndex;
+        currentPhraseIndex = historyItem.phraseIndex;
+        
+        updateAll();
+        hideLoadingState();
+        
+        // Add haptic feedback
+        triggerHapticFeedback();
+        
+        // Announce to screen readers
+        const phrase = currentLocation.phrases[currentPhraseIndex];
+        if (!isWhimsicalLocation(currentLocation)) {
+            const announcement = `Going back: ${phrase.text}, meaning ${phrase.meaning || 'no translation'}, from ${currentLocation.location}`;
+            announceToScreenReader(announcement);
+        } else {
+            announceToScreenReader(`Going back to: ${currentLocation.location}`);
+        }
+        
+        setTimeout(() => speakPhrase(), 200);
+    }).catch(() => {
+        hideLoadingState();
+        currentLocation = historyItem.location;
+        currentLocationIndex = historyItem.locationIndex;
+        currentPhraseIndex = historyItem.phraseIndex;
+        updateAll();
+        setTimeout(() => speakPhrase(), 200);
+    });
+}
+
 
 
 // Touch gesture variables
@@ -261,7 +336,13 @@ function handleTouchEnd(e) {
     // Handle swipe gestures
     if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
         triggerHapticFeedback();
-        getRandomPhrase(); // Both left and right swipes get new phrase
+        if (deltaX > 0) {
+            // Swipe right - forward (new random phrase)
+            getRandomPhrase();
+        } else {
+            // Swipe left - back in history
+            goBackInHistory();
+        }
     } else if (deltaY < -50) {
         // Swipe up - open help
         if (!terminalVisible) {
@@ -332,13 +413,7 @@ function updateAll() {
     photographerLink.setAttribute('rel', 'noopener noreferrer');
     photographerLink.setAttribute('target', '_blank');
 
-    // Update progress indicator
-    const currentLocationSpan = document.getElementById('current-location');
-    const totalLocationsSpan = document.getElementById('total-locations');
-    if (currentLocationSpan && totalLocationsSpan) {
-        currentLocationSpan.textContent = (currentLocationIndex + 1).toString();
-        totalLocationsSpan.textContent = allLocations.length.toString();
-    }
+
 }
 
 function getRandomPhrase() {
@@ -360,6 +435,11 @@ function getRandomPhrase() {
 
     // Preload the image and update when ready
     preloadImage(newLocation.image).then(() => {
+        // Add current state to history before changing (if we have a current location)
+        if (currentLocation) {
+            addToHistory(currentLocation, currentLocationIndex, currentPhraseIndex);
+        }
+
         currentLocation = newLocation;
         currentLocationIndex = newLocationIndex;
 
@@ -527,18 +607,20 @@ function toggleTerminal() {
     const terminal = document.getElementById('terminal');
     const terminalDialog = document.getElementById('terminal-dialog');
 
+    console.log('Toggle terminal:', terminalVisible, terminal, terminalDialog); // Debug
+
     if (terminalVisible) {
-        terminal.classList.add('show');
-        terminalDialog.setAttribute('aria-hidden', 'false');
+        if (terminal) terminal.classList.add('show');
+        if (terminalDialog) terminalDialog.setAttribute('aria-hidden', 'false');
         // Focus the close button for keyboard users
-        const closeButton = terminal.querySelector('.terminal-close');
+        const closeButton = terminal?.querySelector('.terminal-close');
         if (closeButton) {
             closeButton.focus();
         }
         announceToScreenReader('Help dialog opened');
     } else {
-        terminal.classList.remove('show');
-        terminalDialog.setAttribute('aria-hidden', 'true');
+        if (terminal) terminal.classList.remove('show');
+        if (terminalDialog) terminalDialog.setAttribute('aria-hidden', 'true');
         announceToScreenReader('Help dialog closed');
     }
 }
@@ -552,9 +634,12 @@ document.addEventListener('keydown', (e) => {
         return;
     }
 
-    if (e.key === 'ArrowRight' || e.key === 'ArrowLeft' || e.key === ' ') {
+    if (e.key === 'ArrowRight' || e.key === ' ') {
         e.preventDefault();
         getRandomPhrase();
+    } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        goBackInHistory();
     } else if (e.key === '?' || e.key === 'h' || e.key === 'H') {
         e.preventDefault();
         console.log('Help key pressed:', e.key); // Debug log
@@ -635,7 +720,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Create mobile instruction lines
             const instructions = [
-                { prompt: 'Mobile:', text: 'Swipe left/right for new phrases' },
+                { prompt: 'Mobile:', text: 'Swipe right for new, left to go back' },
                 { prompt: 'Gestures:', text: 'Swipe up for help, down to close' },
                 { prompt: 'Long press:', text: 'Repeat current phrase' }
             ];

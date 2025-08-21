@@ -270,8 +270,13 @@ body {
 }
 
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 /* Animations */
@@ -280,18 +285,22 @@ body {
         font-size: 2rem;
         opacity: 0;
     }
+
     15% {
         opacity: 1;
         font-size: 3rem;
     }
+
     60% {
         opacity: 1;
         font-size: 6rem;
     }
+
     85% {
         opacity: 1;
         font-size: 100rem;
     }
+
     100% {
         font-size: 160rem;
         opacity: 0;
@@ -304,21 +313,25 @@ body {
         opacity: 0;
         transform: rotate(0deg);
     }
+
     15% {
         opacity: 1;
         font-size: 3rem;
         transform: rotate(45deg);
     }
+
     60% {
         opacity: 1;
         font-size: 6rem;
         transform: rotate(180deg);
     }
+
     85% {
         opacity: 1;
         font-size: 100rem;
         transform: rotate(540deg);
     }
+
     100% {
         font-size: 160rem;
         opacity: 0;
@@ -331,10 +344,12 @@ body {
         opacity: 0;
         transform: scale(0.5);
     }
+
     50% {
         opacity: 1;
         transform: scale(1.2);
     }
+
     100% {
         opacity: 0;
         transform: scale(2);
@@ -388,7 +403,9 @@ button:active {
 }
 
 /* Prevent accidental zoom on inputs */
-input, textarea, select {
+input,
+textarea,
+select {
     font-size: 16px;
 }
 
@@ -398,7 +415,7 @@ input, textarea, select {
         background: rgba(0, 0, 0, 0.95);
         border: 2px solid white;
     }
-    
+
     .terminal {
         background: rgba(0, 0, 0, 0.95);
         border: 2px solid white;
@@ -412,7 +429,7 @@ input, textarea, select {
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
     }
-    
+
     .flying-text {
         display: none;
     }
@@ -425,65 +442,65 @@ input, textarea, select {
         line-height: 1.2;
         margin-bottom: 1rem;
     }
-    
+
     .phrase-meaning {
         font-size: 1.1rem;
     }
-    
+
     .ui-element {
         padding: 1rem;
         margin: 0.5rem;
         border-radius: 12px;
         font-size: 0.9rem;
     }
-    
+
     .location-bubble {
         max-width: calc(100vw - 2rem);
         word-wrap: break-word;
         left: 0.5rem;
     }
-    
+
     .location-bubble.expanded {
         min-width: calc(100vw - 3rem);
         margin-left: 0;
     }
-    
+
     .photo-credit {
         left: 0.5rem;
         bottom: 0.5rem;
         max-width: calc(100vw - 2rem);
         word-wrap: break-word;
     }
-    
+
     .terminal {
         width: 95vw;
         height: 85vh;
         padding: 1.5rem;
         margin: 2.5vh 2.5vw;
     }
-    
+
     .terminal-header {
         font-size: 1.2rem;
         margin-bottom: 1rem;
     }
-    
+
     .terminal-line {
         font-size: 0.9rem;
         margin-bottom: 0.75rem;
     }
-    
+
     /* Optimize flying text for mobile */
     .flying-text {
         max-width: 90vw;
         text-align: center;
         word-wrap: break-word;
     }
-    
+
     /* Reduce animation complexity on mobile */
     .flying-text {
         animation-duration: 2s !important;
     }
-    
+
     /* Disable complex animations on older/slower devices */
     @media (max-resolution: 150dpi) {
         .flying-text {
@@ -497,24 +514,24 @@ input, textarea, select {
     .phrase-text {
         font-size: 2rem;
     }
-    
+
     .phrase-meaning {
         font-size: 1rem;
     }
-    
+
     .ui-element {
         padding: 0.75rem;
         font-size: 0.8rem;
     }
-    
+
     .terminal {
         padding: 1rem;
     }
-    
+
     .terminal-header {
         font-size: 1.1rem;
     }
-    
+
     .terminal-line {
         font-size: 0.85rem;
     }
@@ -525,16 +542,16 @@ input, textarea, select {
     .phrase-text {
         font-size: 2rem;
     }
-    
+
     .ui-element {
         padding: 0.5rem 1rem;
     }
-    
+
     .terminal {
         height: 90vh;
         padding: 1rem;
     }
-    
+
     .location-bubble.expanded {
         max-height: 40vh;
         overflow-y: auto;
