@@ -13,20 +13,22 @@
     <meta property="og:description" content="A delightful journey through greetings from around the world">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://gogeske.com">
-    
+
     <!-- Security Headers -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' https://images.unsplash.com; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'none'; font-src 'self'; object-src 'none'; media-src 'none'; frame-src 'none'; base-uri 'self'; form-action 'none';">
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; img-src 'self' https://images.unsplash.com; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'none'; font-src 'self'; object-src 'none'; media-src 'none'; frame-src 'none'; base-uri 'self'; form-action 'none';">
     <meta http-equiv="X-Content-Type-Options" content="nosniff">
     <meta http-equiv="X-XSS-Protection" content="1; mode=block">
     <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
-    <meta http-equiv="Permissions-Policy" content="geolocation=(), microphone=(), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()">
-    
+    <meta http-equiv="Permissions-Policy"
+        content="geolocation=(), microphone=(), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()">
+
     <!-- External CSS for better organization -->
     <link rel="stylesheet" href="styles.css">
-    
+
     <!-- JavaScript files -->
     <script src="app.js" defer></script>
-    
+
     <!-- Social Media Meta Tags -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Hello World - Geske Family">
@@ -40,12 +42,10 @@
     <main id="main-content" role="main" aria-label="Language Explorer Application">
         <!-- Live region for screen reader announcements -->
         <div id="live-region" aria-live="polite" aria-atomic="true" class="sr-only"></div>
-        
+
         <section role="region" aria-label="Current location and phrase display">
-            <div class="ui-element location-bubble" id="location-bubble" 
-                 role="button" tabindex="0" 
-                 aria-label="Location information. Press Enter or Space to expand details"
-                 aria-expanded="false">
+            <div class="ui-element location-bubble" id="location-bubble" role="button" tabindex="0"
+                aria-label="Location information. Press Enter or Space to expand details" aria-expanded="false">
                 <div id="location-name"></div>
                 <div class="click-hint">ⓘ</div>
                 <div class="details" id="details" aria-hidden="true">
@@ -61,7 +61,8 @@
 
         <aside role="complementary" aria-label="Photo credits and attribution">
             <div class="ui-element photo-credit" id="photo-credit">
-                Photo by <a href="#" id="photographer-link"></a> on <a href="https://unsplash.com" target="_blank" rel="noopener noreferrer">Unsplash</a>
+                Photo by <a href="#" id="photographer-link"></a> on <a href="https://unsplash.com" target="_blank"
+                    rel="noopener noreferrer">Unsplash</a>
             </div>
         </aside>
     </main>
@@ -70,13 +71,18 @@
         <div class="terminal" id="terminal">
             <div class="terminal-header" id="terminal-header">Language Explorer Help</div>
             <button class="terminal-close" aria-label="Close help dialog">×</button>
-            <div class="terminal-line"><span class="terminal-prompt">Locations:</span>55 available (35 languages + 20 whimsical)</div>
+            <div class="terminal-line"><span class="terminal-prompt">Locations:</span>55 available (35 languages + 20
+                whimsical)</div>
             <div style="margin-top: 1.5rem;">
-                <div class="terminal-line"><span class="terminal-prompt">Navigation:</span>→ or Space for new, ← to go back</div>
+                <div class="terminal-line"><span class="terminal-prompt">Navigation:</span>→ or Space for new, ← to go
+                    back</div>
                 <div class="terminal-line"><span class="terminal-prompt">Audio:</span>Click anywhere to repeat</div>
-                <div class="terminal-line"><span class="terminal-prompt">Help:</span>Press ? to toggle this terminal</div>
-                <div class="terminal-line"><span class="terminal-prompt">Location:</span>Press . to show/hide location info</div>
-                <div class="terminal-line"><span class="terminal-prompt">LinkedIn:</span>Press D for Daniel, S for Stephanie</div>
+                <div class="terminal-line"><span class="terminal-prompt">Help:</span>Press ? to toggle this terminal
+                </div>
+                <div class="terminal-line"><span class="terminal-prompt">Location:</span>Press . to show/hide location
+                    info</div>
+                <div class="terminal-line"><span class="terminal-prompt">LinkedIn:</span>Press D for Daniel, S for
+                    Stephanie</div>
                 <div class="terminal-line"><span class="terminal-prompt">Links:</span>Press I for iCloud</div>
             </div>
         </div>

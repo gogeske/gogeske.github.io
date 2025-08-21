@@ -128,12 +128,7 @@ let historyIndex = -1;
 
 // History management functions
 function addToHistory(location, locationIndex, phraseIndex) {
-    // If we're not at the end of history, truncate everything after current position
-    if (historyIndex < locationHistory.length - 1) {
-        locationHistory = locationHistory.slice(0, historyIndex + 1);
-    }
-    
-    // Add new entry
+    // Add new entry to history
     locationHistory.push({
         location: location,
         locationIndex: locationIndex,
@@ -143,21 +138,27 @@ function addToHistory(location, locationIndex, phraseIndex) {
     // Keep history reasonable size (last 20 items)
     if (locationHistory.length > 20) {
         locationHistory.shift();
-    } else {
-        historyIndex++;
     }
+    
+    // Update history index to point to the end (current position is not in history)
+    historyIndex = locationHistory.length - 1;
+    console.log('Added to history:', location.location, 'historyIndex:', historyIndex, 'history length:', locationHistory.length);
 }
 
 function goBackInHistory() {
-    if (historyIndex <= 0) {
+    console.log('Going back - historyIndex:', historyIndex, 'history length:', locationHistory.length);
+    
+    if (historyIndex < 0 || locationHistory.length === 0) {
         // No history to go back to, just get a random phrase
+        console.log('No history, getting random phrase');
         getRandomPhrase();
         return;
     }
     
     speechSynthesis.cancel();
-    historyIndex--;
     const historyItem = locationHistory[historyIndex];
+    console.log('Going back to:', historyItem.location.location);
+    historyIndex--; // Move back in history after getting the item
     
     // Show loading state if image isn't preloaded
     const imageUrl = getResponsiveImageUrl(historyItem.location.image);
