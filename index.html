@@ -414,13 +414,144 @@
             }
         }
 
+        /* Mobile-first responsive design */
         @media (max-width: 768px) {
             .phrase-text {
                 font-size: 2.5rem;
+                line-height: 1.2;
+                margin-bottom: 1rem;
             }
-
+            
+            .phrase-meaning {
+                font-size: 1.1rem;
+            }
+            
+            .ui-element {
+                padding: 1rem;
+                margin: 0.5rem;
+                border-radius: 12px;
+                font-size: 0.9rem;
+            }
+            
+            .location-bubble {
+                max-width: calc(100vw - 2rem);
+                word-wrap: break-word;
+                left: 0.5rem;
+            }
+            
+            .location-bubble.expanded {
+                min-width: calc(100vw - 3rem);
+                margin-left: 0;
+            }
+            
+            .photo-credit {
+                left: 0.5rem;
+                bottom: 0.5rem;
+                max-width: calc(100vw - 2rem);
+                word-wrap: break-word;
+            }
+            
             .terminal {
                 width: 95vw;
+                height: 85vh;
+                padding: 1.5rem;
+                margin: 2.5vh 2.5vw;
+            }
+            
+            .terminal-header {
+                font-size: 1.2rem;
+                margin-bottom: 1rem;
+            }
+            
+            .terminal-line {
+                font-size: 0.9rem;
+                margin-bottom: 0.75rem;
+            }
+            
+            /* Optimize flying text for mobile */
+            .flying-text {
+                max-width: 90vw;
+                text-align: center;
+                word-wrap: break-word;
+            }
+        }
+
+        /* Extra small screens */
+        @media (max-width: 480px) {
+            .phrase-text {
+                font-size: 2rem;
+            }
+            
+            .phrase-meaning {
+                font-size: 1rem;
+            }
+            
+            .ui-element {
+                padding: 0.75rem;
+                font-size: 0.8rem;
+            }
+            
+            .terminal {
+                padding: 1rem;
+            }
+            
+            .terminal-header {
+                font-size: 1.1rem;
+            }
+            
+            .terminal-line {
+                font-size: 0.85rem;
+            }
+        }
+
+        /* Landscape orientation optimizations */
+        @media (orientation: landscape) and (max-height: 500px) {
+            .phrase-text {
+                font-size: 2rem;
+            }
+            
+            .ui-element {
+                padding: 0.5rem 1rem;
+            }
+            
+            .terminal {
+                height: 90vh;
+                padding: 1rem;
+            }
+            
+            .location-bubble.expanded {
+                max-height: 40vh;
+                overflow-y: auto;
+            }
+        }
+
+        /* Performance optimizations for mobile */
+        @media (max-width: 768px) {
+            /* Reduce animation complexity on mobile */
+            .flying-text {
+                animation-duration: 2s !important;
+            }
+            
+            /* Disable complex animations on older/slower devices */
+            @media (max-resolution: 150dpi) {
+                .flying-text {
+                    animation: simpleFlyThrough 1.5s ease-out forwards !important;
+                }
+                
+                @keyframes simpleFlyThrough {
+                    0% {
+                        opacity: 0;
+                        transform: scale(0.5);
+                    }
+                    50% {
+                        opacity: 1;
+                        transform: scale(1.2);
+                    }
+                    100% {
+                        opacity: 0;
+                        transform: scale(2);
+                    }
+                }
             }
         }
     </style>
@@ -450,7 +581,7 @@
         <!-- Progress indicator -->
         <div class="ui-element progress-indicator" id="progress-indicator" 
              role="status" aria-live="polite" aria-label="Location progress">
-            <span id="current-location">1</span> of <span id="total-locations">65</span> locations
+            <span id="current-location">1</span> of <span id="total-locations">55</span> locations
         </div>
 
         <!-- Audio controls -->
@@ -474,7 +605,7 @@
         <div class="terminal" id="terminal">
         <div class="terminal-header" id="terminal-header">Language Explorer Help</div>
         <button class="terminal-close" aria-label="Close help dialog">×</button>
-        <div class="terminal-line"><span class="terminal-prompt">Locations:</span>28 available (20 languages + 8
+        <div class="terminal-line"><span class="terminal-prompt">Locations:</span>55 available (35 languages + 20
             whimsical)</div>
         <div style="margin-top: 1.5rem;">
             <div class="terminal-line"><span class="terminal-prompt">Navigation:</span>Arrow keys, Space, or Click</div>
