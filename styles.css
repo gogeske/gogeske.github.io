@@ -152,11 +152,30 @@ body {
     margin-right: 0.5rem;
 }
 
-.terminal {
+dialog {
     position: fixed;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%) scale(0);
+    transform: translate(-50%, -50%);
+    border: none;
+    background: transparent;
+    padding: 0;
+    z-index: 3000;
+}
+
+dialog[aria-hidden="true"] {
+    display: none;
+}
+
+dialog[aria-hidden="false"] {
+    display: block;
+}
+
+.terminal {
+    position: relative;
+    top: 0;
+    left: 0;
+    transform: scale(0);
     width: 80vw;
     max-width: 600px;
     background: rgba(255, 255, 255, 0.1);
@@ -164,7 +183,6 @@ body {
     border: 0.5px solid rgba(255, 255, 255, 0.2);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
     border-radius: 20px;
-    z-index: 3000;
     opacity: 0;
     transition: all 0.3s cubic-bezier(0.1, 0.1, 0.9, 1);
     padding: 2rem;
@@ -172,7 +190,7 @@ body {
 
 .terminal.show {
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
+    transform: scale(1);
 }
 
 .terminal-header {
