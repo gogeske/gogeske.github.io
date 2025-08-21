@@ -70,12 +70,33 @@ body {
     min-height: 44px;
     min-width: 44px;
     padding: 12px;
-    transition: transform 0.1s ease, background-color 0.2s ease;
+    transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.location-bubble:hover {
+    background: rgba(255, 255, 255, 0.2);
+    cursor: pointer;
+    transform: translateY(-1px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
 }
 
 .location-bubble:active {
     transform: scale(0.95);
     background: rgba(255, 255, 255, 0.2);
+}
+
+.click-hint {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    font-size: 12px;
+    opacity: 0.6;
+    transition: opacity 0.2s ease;
+}
+
+.location-bubble:hover .click-hint {
+    opacity: 1;
 }
 
 .location-bubble.expanded {
@@ -95,58 +116,7 @@ body {
     min-width: 80px;
 }
 
-.audio-controls {
-    top: 4rem;
-    right: 1rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 0.75rem;
-}
 
-.audio-controls button {
-    background: none;
-    border: none;
-    color: white;
-    font-size: 1rem;
-    cursor: pointer;
-    padding: 0.25rem;
-    border-radius: 4px;
-    min-width: 32px;
-    min-height: 32px;
-}
-
-.audio-controls button:hover,
-.audio-controls button:focus {
-    background: rgba(255, 255, 255, 0.2);
-}
-
-.audio-controls input[type="range"] {
-    width: 60px;
-    height: 4px;
-    background: rgba(255, 255, 255, 0.3);
-    border-radius: 2px;
-    outline: none;
-    -webkit-appearance: none;
-}
-
-.audio-controls input[type="range"]::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 12px;
-    height: 12px;
-    background: white;
-    border-radius: 50%;
-    cursor: pointer;
-}
-
-.audio-controls input[type="range"]::-moz-range-thumb {
-    width: 12px;
-    height: 12px;
-    background: white;
-    border-radius: 50%;
-    cursor: pointer;
-    border: none;
-}
 
 .photo-credit {
     bottom: 1rem;

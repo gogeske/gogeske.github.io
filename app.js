@@ -122,9 +122,7 @@ let isLoading = false;
 let currentLocationIndex = 0;
 let allLocations = [];
 
-// Audio control variables
-let isMuted = false;
-let audioVolume = 1.0;
+
 
 // Touch gesture variables
 let touchStartX = 0;
@@ -224,26 +222,6 @@ function triggerHapticFeedback(pattern = 50) {
     if ('vibrate' in navigator && isMobileDevice()) {
         navigator.vibrate(pattern);
     }
-}
-
-// Audio control functions
-function toggleMute() {
-    isMuted = !isMuted;
-    const muteButton = document.getElementById('mute-button');
-    if (muteButton) {
-        muteButton.textContent = isMuted ? '🔇' : '🔊';
-        muteButton.setAttribute('aria-label', isMuted ? 'Unmute audio' : 'Mute audio');
-    }
-
-    // Stop current speech if muting
-    if (isMuted) {
-        speechSynthesis.cancel();
-    }
-}
-
-function updateVolume(volume) {
-    audioVolume = parseFloat(volume);
-    // Volume will be applied in speakPhrase function
 }
 
 // Touch gesture handlers
@@ -499,13 +477,12 @@ function speakPhrase() {
 
     setTimeout(() => flyingText.remove(), 2600);
 
-    // Speak if not emoji, has language, and audio is not muted
-    if (!isEmoji && currentLocation.lang && 'speechSynthesis' in window && !isMuted) {
+    // Speak if not emoji and has language
+    if (!isEmoji && currentLocation.lang && 'speechSynthesis' in window) {
         audioPlaying = true;
         const utterance = new SpeechSynthesisUtterance(phrase.text);
         utterance.lang = currentLocation.lang;
         utterance.rate = isMobileDevice() ? 0.9 : 1.0;
-        utterance.volume = audioVolume;
 
         // Lazy initialize voices only when speech is first used
         if (cachedVoices.length === 0) updateVoicesCache();
@@ -580,6 +557,7 @@ document.addEventListener('keydown', (e) => {
         getRandomPhrase();
     } else if (e.key === '?' || e.key === 'h' || e.key === 'H') {
         e.preventDefault();
+        console.log('Help key pressed:', e.key); // Debug log
         toggleTerminal();
     } else if (e.key === '.') {
         e.preventDefault();
@@ -642,17 +620,7 @@ document.addEventListener('DOMContentLoaded', () => {
         terminalDialog.setAttribute('aria-hidden', 'true');
     }
 
-    // Initialize audio controls
-    const muteButton = document.getElementById('mute-button');
-    const volumeSlider = document.getElementById('volume-slider');
 
-    if (muteButton) {
-        muteButton.addEventListener('click', toggleMute);
-    }
-
-    if (volumeSlider) {
-        volumeSlider.addEventListener('input', (e) => updateVolume(e.target.value));
-    }
 
     // Add touch event listeners for mobile gestures
     if (isMobileDevice()) {
