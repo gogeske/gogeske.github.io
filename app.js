@@ -4,11 +4,11 @@ const getResponsiveImageUrl = (baseUrl) => {
     // Extract base URL without existing parameters
     const urlParts = baseUrl.split('?');
     const base = urlParts[0];
-    
+
     // Get current viewport width to determine appropriate size
     const width = window.innerWidth;
     let size;
-    
+
     if (width <= 768) {
         size = 'w=400';  // Mobile
     } else if (width <= 1024) {
@@ -16,7 +16,7 @@ const getResponsiveImageUrl = (baseUrl) => {
     } else {
         size = 'w=1200'; // Desktop
     }
-    
+
     // Use WebP format with JPEG fallback and aggressive compression for performance
     return `${base}?ixlib=rb-4.0.3&auto=format&fit=crop&${size}&fm=webp&q=60`;
 };
@@ -43,7 +43,7 @@ const languageExplorer = {
         { lang: 'vi-VN', lang_name: 'Vietnamese', location: 'Ho Chi Minh City, Vietnam', image: 'https://images.unsplash.com/photo-1583417319070-4a69db38a482', photographer: 'Linh Pham', photographerUrl: 'https://unsplash.com/@linhmadebyhand', phrases: [{ text: 'Xin chào', meaning: 'Hello' }, { text: 'Chào bạn', meaning: 'Hi' }] },
         { lang: 'id-ID', lang_name: 'Indonesian', location: 'Jakarta, Indonesia', image: 'https://images.unsplash.com/photo-1555212697-194d092e3b8f', photographer: 'Afif Kusuma', photographerUrl: 'https://unsplash.com/@javaistan', phrases: [{ text: 'Halo', meaning: 'Hello' }, { text: 'Selamat pagi', meaning: 'Good morning' }] },
         { lang: 'th-TH', lang_name: 'Thai', location: 'Bangkok, Thailand', image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4', photographer: 'Sumit Chinchane', photographerUrl: 'https://unsplash.com/@sumitchinchane', phrases: [{ text: 'สวัสดี', meaning: 'Hello' }, { text: 'หวัดดี', meaning: 'Hi' }] },
-        
+
         // High-demand languages expansion
         { lang: 'sw-TZ', lang_name: 'Swahili', location: 'Stone Town, Zanzibar', image: 'https://images.unsplash.com/photo-1544735716-392fe2489ffa', photographer: 'Sergey Pesterev', photographerUrl: 'https://unsplash.com/@sickle', phrases: [{ text: 'Hujambo', meaning: 'Hello (formal)' }, { text: 'Mambo', meaning: 'What\'s up?' }] },
         { lang: 'he-IL', lang_name: 'Hebrew', location: 'Jerusalem, Israel', image: 'https://images.unsplash.com/photo-1544966503-7cc5ac882d5f', photographer: 'Sander Crombach', photographerUrl: 'https://unsplash.com/@sandercrombach', phrases: [{ text: 'שלום', meaning: 'Hello/Peace' }, { text: 'מה נשמע?', meaning: 'What\'s up?' }] },
@@ -72,7 +72,7 @@ const languageExplorer = {
         { type: 'whimsical', lang_name: 'Hope', location: '🌈 After the Storm', image: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05', photographer: 'Sergey Pesterev', photographerUrl: 'https://unsplash.com/@sickle', phrases: [{ text: '🌈' }, { text: '⛈️' }, { text: '🌦️' }, { text: '☀️' }, { text: '✨' }, { text: '💎' }, { text: '🦄' }, { text: '💫' }, { text: '🌟' }, { text: '👋' }] },
         { type: 'whimsical', lang_name: 'Aurora', location: '🔥 Aurora Dance', image: 'https://images.unsplash.com/photo-1531366936337-7c912a4589a7', photographer: 'Vincent Guth', photographerUrl: 'https://unsplash.com/@vinceguth', phrases: [{ text: '🔥' }, { text: '✨' }, { text: '🌌' }, { text: '💚' }, { text: '💙' }, { text: '💜' }, { text: '🌟' }, { text: '❄️' }, { text: '🏔️' }, { text: '👋' }] },
         { type: 'whimsical', lang_name: 'Wildlife', location: '🐾 Wildlife Wonder', image: 'https://images.unsplash.com/photo-1516426122078-c23e76319801', photographer: 'Hu Chen', photographerUrl: 'https://unsplash.com/@huchenme', phrases: [{ text: '🐾' }, { text: '🦁' }, { text: '🐘' }, { text: '🦒' }, { text: '🦓' }, { text: '🐆' }, { text: '🦅' }, { text: '🌍' }, { text: '✨' }, { text: '👋' }] },
-        
+
         // Enhanced whimsical locations
         { type: 'whimsical', lang_name: 'Desert', location: '🏜️ Desert Oasis', image: 'https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9', photographer: 'Walid Ahmad', photographerUrl: 'https://unsplash.com/@walid_ahmad', phrases: [{ text: '🏜️' }, { text: '🐪' }, { text: '🌵' }, { text: '☀️' }, { text: '💧' }, { text: '🏛️' }, { text: '✨' }, { text: '🌙' }, { text: '⭐' }, { text: '👋' }] },
         { type: 'whimsical', lang_name: 'Volcanic', location: '🌋 Volcanic Islands', image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4', photographer: 'Marc Szeglat', photographerUrl: 'https://unsplash.com/@marcszeglat', phrases: [{ text: '🌋' }, { text: '🏝️' }, { text: '🔥' }, { text: '🌺' }, { text: '🥥' }, { text: '🐚' }, { text: '🌊' }, { text: '☀️' }, { text: '✨' }, { text: '👋' }] },
@@ -158,7 +158,7 @@ function preloadImage(url) {
             resolve(imageCache.get(url));
             return;
         }
-        
+
         const img = new Image();
         img.onload = () => {
             imageCache.set(url, img);
@@ -186,25 +186,25 @@ function preloadNextImages(currentIndex, locations) {
 
 function showLoadingState() {
     if (isLoading) return; // Prevent multiple loading states
-    
+
     isLoading = true;
     document.body.style.filter = 'blur(2px)';
     document.body.style.transition = 'filter 0.3s ease';
-    
+
     // Create loading indicator with proper DOM manipulation
     const loadingIndicator = document.createElement('div');
     loadingIndicator.id = 'loading-indicator';
     loadingIndicator.className = 'loading-overlay';
-    
+
     const content = document.createElement('div');
     content.className = 'loading-content';
-    
+
     const spinner = document.createElement('div');
     spinner.className = 'loading-spinner';
-    
+
     const text = document.createElement('span');
     text.textContent = 'Loading next location...';
-    
+
     content.appendChild(spinner);
     content.appendChild(text);
     loadingIndicator.appendChild(content);
@@ -234,7 +234,7 @@ function toggleMute() {
         muteButton.textContent = isMuted ? '🔇' : '🔊';
         muteButton.setAttribute('aria-label', isMuted ? 'Unmute audio' : 'Mute audio');
     }
-    
+
     // Stop current speech if muting
     if (isMuted) {
         speechSynthesis.cancel();
@@ -252,7 +252,7 @@ function handleTouchStart(e) {
     touchStartY = e.touches[0].clientY;
     touchStartTime = Date.now();
     isLongPress = false;
-    
+
     // Set up long press detection
     setTimeout(() => {
         if (Date.now() - touchStartTime >= 500) {
@@ -266,20 +266,20 @@ function handleTouchEnd(e) {
     const touchEndX = e.changedTouches[0].clientX;
     const touchEndY = e.changedTouches[0].clientY;
     const touchDuration = Date.now() - touchStartTime;
-    
+
     const deltaX = touchEndX - touchStartX;
     const deltaY = touchEndY - touchStartY;
     const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-    
+
     // Ignore if touch moved too much (likely scrolling)
     if (distance > 100) return;
-    
+
     // Handle long press
     if (isLongPress) {
         speakPhrase(); // Repeat current phrase
         return;
     }
-    
+
     // Handle swipe gestures
     if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
         triggerHapticFeedback();
@@ -353,7 +353,7 @@ function updateAll() {
     photographerLink.href = currentLocation.photographerUrl;
     photographerLink.setAttribute('rel', 'noopener noreferrer');
     photographerLink.setAttribute('target', '_blank');
-    
+
     // Update progress indicator
     const currentLocationSpan = document.getElementById('current-location');
     const totalLocationsSpan = document.getElementById('total-locations');
@@ -394,13 +394,13 @@ function getRandomPhrase() {
 
         updateAll();
         hideLoadingState();
-        
+
         // Preload next images for smooth future transitions
         preloadNextImages(currentLocationIndex, allLocations);
-        
+
         // Add haptic feedback for mobile users
         triggerHapticFeedback();
-        
+
         // Announce new phrase to screen readers
         const phrase = currentLocation.phrases[currentPhraseIndex];
         if (!isWhimsicalLocation(currentLocation)) {
@@ -409,20 +409,20 @@ function getRandomPhrase() {
         } else {
             announceToScreenReader(`New location: ${currentLocation.location}`);
         }
-        
+
         setTimeout(() => speakPhrase(), 200);
     }).catch(() => {
         // Fallback: proceed without preloading
         hideLoadingState();
         currentLocation = newLocation;
         currentLocationIndex = newLocationIndex;
-        
+
         let newPhraseIndex;
         do {
             newPhraseIndex = Math.floor(Math.random() * currentLocation.phrases.length);
         } while (newPhraseIndex === currentPhraseIndex && currentLocation.phrases.length > 1);
         currentPhraseIndex = newPhraseIndex;
-        
+
         updateAll();
         triggerHapticFeedback();
         setTimeout(() => speakPhrase(), 200);
@@ -445,12 +445,12 @@ function speakPhrase() {
         // Create elements safely to prevent XSS
         const textDiv = document.createElement('div');
         textDiv.textContent = phrase.text;
-        
+
         const meaningDiv = document.createElement('div');
         meaningDiv.textContent = phrase.meaning;
         meaningDiv.style.fontSize = '0.8em';
         meaningDiv.style.opacity = '0.9';
-        
+
         flyingText.appendChild(textDiv);
         flyingText.appendChild(meaningDiv);
     }
@@ -549,7 +549,7 @@ function toggleTerminal() {
     terminalVisible = !terminalVisible;
     const terminal = document.getElementById('terminal');
     const terminalDialog = document.getElementById('terminal-dialog');
-    
+
     if (terminalVisible) {
         terminal.classList.add('show');
         terminalDialog.setAttribute('aria-hidden', 'false');
@@ -574,7 +574,7 @@ document.addEventListener('keydown', (e) => {
         toggleTerminal();
         return;
     }
-    
+
     if (e.key === 'ArrowRight' || e.key === 'ArrowLeft' || e.key === ' ') {
         e.preventDefault();
         getRandomPhrase();
@@ -606,7 +606,7 @@ document.addEventListener('keydown', (e) => {
 
 document.body.addEventListener('click', (e) => {
     if (e.target.tagName === 'A' || e.target.closest('.terminal')) return;
-    
+
     // Handle terminal close button
     if (e.target.classList.contains('terminal-close')) {
         toggleTerminal();
@@ -626,7 +626,7 @@ document.body.addEventListener('click', (e) => {
 document.addEventListener('DOMContentLoaded', () => {
     // Initialize allLocations array
     allLocations = [...languageExplorer.countries, ...languageExplorer.whimsical];
-    
+
     // Cache DOM elements for performance
     locationBubble = document.getElementById('location-bubble');
     locationName = document.getElementById('location-name');
@@ -645,11 +645,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize audio controls
     const muteButton = document.getElementById('mute-button');
     const volumeSlider = document.getElementById('volume-slider');
-    
+
     if (muteButton) {
         muteButton.addEventListener('click', toggleMute);
     }
-    
+
     if (volumeSlider) {
         volumeSlider.addEventListener('input', (e) => updateVolume(e.target.value));
     }
@@ -658,33 +658,33 @@ document.addEventListener('DOMContentLoaded', () => {
     if (isMobileDevice()) {
         document.addEventListener('touchstart', handleTouchStart, { passive: true });
         document.addEventListener('touchend', handleTouchEnd, { passive: true });
-        
+
         // Add mobile-specific instructions to terminal
         const terminal = document.getElementById('terminal');
         if (terminal) {
             const mobileSection = document.createElement('div');
             mobileSection.className = 'mobile-instructions';
-            
+
             // Create mobile instruction lines
             const instructions = [
                 { prompt: 'Mobile:', text: 'Swipe left/right for new phrases' },
                 { prompt: 'Gestures:', text: 'Swipe up for help, down to close' },
                 { prompt: 'Long press:', text: 'Repeat current phrase' }
             ];
-            
+
             instructions.forEach(instruction => {
                 const line = document.createElement('div');
                 line.className = 'terminal-line';
-                
+
                 const prompt = document.createElement('span');
                 prompt.className = 'terminal-prompt';
                 prompt.textContent = instruction.prompt;
-                
+
                 line.appendChild(prompt);
                 line.appendChild(document.createTextNode(instruction.text));
                 mobileSection.appendChild(line);
             });
-            
+
             terminal.appendChild(mobileSection);
         }
     }
