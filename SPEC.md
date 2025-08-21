@@ -38,6 +38,11 @@
 - ✅ Browser testing integration
 - ✅ Two modes: quick commit vs full testing
 
+### Security
+- ✅ Content Security Policy (CSP) for XSS protection
+- ✅ X-Frame-Options to prevent clickjacking
+- ✅ KISS approach - essential headers only
+
 ## Design Rules (Keep It Simple)
 
 **Typography:** System fonts (-apple-system, BlinkMacSystemFont)  
