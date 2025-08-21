@@ -13,6 +13,15 @@
     <meta property="og:description" content="A delightful journey through greetings from around the world">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://gogeske.com">
+    
+    <!-- Security Headers -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' https://images.unsplash.com; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'none'; font-src 'self'; object-src 'none'; media-src 'none'; frame-src 'none'; base-uri 'self'; form-action 'none';">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block">
+    <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+    <meta http-equiv="Permissions-Policy" content="geolocation=(), microphone=(), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()">
+    
     <script src="app.js" defer></script>
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Hello World - Geske Family">
@@ -266,7 +275,7 @@
     </div>
 
     <div class="ui-element photo-credit" id="photo-credit">
-        Photo by <a href="#" id="photographer-link"></a> on <a href="https://unsplash.com" target="_blank">Unsplash</a>
+        Photo by <a href="#" id="photographer-link"></a> on <a href="https://unsplash.com" target="_blank" rel="noopener noreferrer">Unsplash</a>
     </div>
 
     <div class="terminal" id="terminal">
@@ -286,4 +295,5 @@
     </div>
 
 </body>
+
 </html>

@@ -7,7 +7,7 @@ const getResponsiveImageUrl = (baseUrl) => {
     
     // Get current viewport width to determine appropriate size
     const width = window.innerWidth;
-    let size, quality;
+    let size;
     
     if (width <= 768) {
         size = 'w=400';  // Mobile
@@ -134,6 +134,8 @@ function updateAll() {
     }
     photographerLink.textContent = currentLocation.photographer;
     photographerLink.href = currentLocation.photographerUrl;
+    photographerLink.setAttribute('rel', 'noopener noreferrer');
+    photographerLink.setAttribute('target', '_blank');
 }
 
 function getRandomPhrase() {
@@ -165,7 +167,17 @@ function speakPhrase() {
     if (isEmoji || !phrase.meaning) {
         flyingText.textContent = phrase.text;
     } else {
-        flyingText.innerHTML = `<div>${phrase.text}</div><div style="font-size: 0.8em; opacity: 0.9;">${phrase.meaning}</div>`;
+        // Create elements safely to prevent XSS
+        const textDiv = document.createElement('div');
+        textDiv.textContent = phrase.text;
+        
+        const meaningDiv = document.createElement('div');
+        meaningDiv.textContent = phrase.meaning;
+        meaningDiv.style.fontSize = '0.8em';
+        meaningDiv.style.opacity = '0.9';
+        
+        flyingText.appendChild(textDiv);
+        flyingText.appendChild(meaningDiv);
     }
 
     // Random starting position around window edges
