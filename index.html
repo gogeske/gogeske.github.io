@@ -23,6 +23,20 @@
     <meta http-equiv="Permissions-Policy" content="geolocation=(), microphone=(), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()">
     
     <script src="app.js" defer></script>
+    <script>
+        // Register service worker for performance caching
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then((registration) => {
+                        console.log('SW registered: ', registration);
+                    })
+                    .catch((registrationError) => {
+                        console.log('SW registration failed: ', registrationError);
+                    });
+            });
+        }
+    </script>
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Hello World - Geske Family">
     <meta name="twitter:description" content="A delightful journey through greetings from around the world">
@@ -102,6 +116,68 @@
             transform-origin: top left;
             min-width: 280px;
             margin-left: 0.5rem;
+        }
+
+        .progress-indicator {
+            top: 1rem;
+            right: 1rem;
+            text-align: center;
+            font-size: 0.75rem;
+            opacity: 0.8;
+            min-width: 80px;
+        }
+
+        .audio-controls {
+            top: 4rem;
+            right: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0.75rem;
+        }
+
+        .audio-controls button {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+            padding: 0.25rem;
+            border-radius: 4px;
+            min-width: 32px;
+            min-height: 32px;
+        }
+
+        .audio-controls button:hover,
+        .audio-controls button:focus {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .audio-controls input[type="range"] {
+            width: 60px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 2px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .audio-controls input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 12px;
+            height: 12px;
+            background: white;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .audio-controls input[type="range"]::-moz-range-thumb {
+            width: 12px;
+            height: 12px;
+            background: white;
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
         }
 
         .photo-credit {
@@ -252,6 +328,92 @@
             }
         }
 
+        /* Accessibility Styles */
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 6px;
+            background: #000;
+            color: #fff;
+            padding: 8px;
+            text-decoration: none;
+            border-radius: 4px;
+            z-index: 10000;
+            transition: top 0.3s;
+        }
+
+        .skip-link:focus {
+            top: 6px;
+        }
+
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        /* Focus indicators */
+        .location-bubble:focus,
+        .terminal-close:focus,
+        a:focus,
+        button:focus {
+            outline: 3px solid #4A90E2;
+            outline-offset: 2px;
+        }
+
+        /* Ensure interactive elements are large enough */
+        .location-bubble {
+            min-height: 44px;
+            min-width: 44px;
+        }
+
+        .terminal-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            min-width: 44px;
+            min-height: 44px;
+            border-radius: 4px;
+        }
+
+        /* High contrast mode support */
+        @media (prefers-contrast: high) {
+            .ui-element {
+                background: rgba(0, 0, 0, 0.95);
+                border: 2px solid white;
+            }
+            
+            .terminal {
+                background: rgba(0, 0, 0, 0.95);
+                border: 2px solid white;
+            }
+        }
+
+        /* Reduced motion support */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+            
+            .flying-text {
+                display: none;
+            }
+        }
+
         @media (max-width: 768px) {
             .phrase-text {
                 font-size: 2.5rem;
@@ -265,21 +427,53 @@
 </head>
 
 <body>
+    <!-- Skip navigation for screen readers -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
 
-    <div class="ui-element location-bubble" id="location-bubble">
-        <div id="location-name"></div>
-        <div class="details" id="details">
-            <div id="detail-sentence1"></div>
-            <div id="detail-sentence2"></div>
+    <main id="main-content" role="main" aria-label="Language Explorer Application">
+        <!-- Live region for screen reader announcements -->
+        <div id="live-region" aria-live="polite" aria-atomic="true" class="sr-only"></div>
+        
+        <section role="region" aria-label="Current location and phrase display">
+            <div class="ui-element location-bubble" id="location-bubble" 
+                 role="button" tabindex="0" 
+                 aria-label="Location information. Press Enter or Space to expand details"
+                 aria-expanded="false">
+                <div id="location-name"></div>
+                <div class="details" id="details" aria-hidden="true">
+                    <div id="detail-sentence1"></div>
+                    <div id="detail-sentence2"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Progress indicator -->
+        <div class="ui-element progress-indicator" id="progress-indicator" 
+             role="status" aria-live="polite" aria-label="Location progress">
+            <span id="current-location">1</span> of <span id="total-locations">65</span> locations
         </div>
-    </div>
 
-    <div class="ui-element photo-credit" id="photo-credit">
-        Photo by <a href="#" id="photographer-link"></a> on <a href="https://unsplash.com" target="_blank" rel="noopener noreferrer">Unsplash</a>
-    </div>
+        <!-- Audio controls -->
+        <div class="ui-element audio-controls" id="audio-controls" 
+             role="group" aria-label="Audio controls">
+            <button id="mute-button" aria-label="Toggle audio mute" title="Toggle audio">
+                🔊
+            </button>
+            <input type="range" id="volume-slider" min="0" max="1" step="0.1" value="1" 
+                   aria-label="Volume control" title="Adjust volume">
+        </div>
 
-    <div class="terminal" id="terminal">
-        <div class="terminal-header">Language Explorer</div>
+        <aside role="complementary" aria-label="Photo credits and attribution">
+            <div class="ui-element photo-credit" id="photo-credit">
+                Photo by <a href="#" id="photographer-link"></a> on <a href="https://unsplash.com" target="_blank" rel="noopener noreferrer">Unsplash</a>
+            </div>
+        </aside>
+    </main>
+
+    <dialog role="dialog" aria-modal="true" aria-labelledby="terminal-header" id="terminal-dialog">
+        <div class="terminal" id="terminal">
+        <div class="terminal-header" id="terminal-header">Language Explorer Help</div>
+        <button class="terminal-close" aria-label="Close help dialog">×</button>
         <div class="terminal-line"><span class="terminal-prompt">Locations:</span>28 available (20 languages + 8
             whimsical)</div>
         <div style="margin-top: 1.5rem;">
@@ -292,7 +486,7 @@
             </div>
             <div class="terminal-line"><span class="terminal-prompt">Links:</span>Press I for iCloud</div>
         </div>
-    </div>
+    </dialog>
 
 </body>
 

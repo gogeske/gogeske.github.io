@@ -17,8 +17,8 @@ const getResponsiveImageUrl = (baseUrl) => {
         size = 'w=1200'; // Desktop
     }
     
-    // Use WebP format with JPEG fallback and optimized quality
-    return `${base}?ixlib=rb-4.0.3&auto=format&fit=crop&${size}&fm=webp&q=75`;
+    // Use WebP format with JPEG fallback and aggressive compression for performance
+    return `${base}?ixlib=rb-4.0.3&auto=format&fit=crop&${size}&fm=webp&q=60`;
 };
 
 const languageExplorer = {
@@ -77,13 +77,216 @@ function updateVoicesCache() {
 }
 
 // Cache DOM elements for performance
-let locationBubble, locationName, detailSentence1, detailSentence2, photoCredit, photographerLink;
+let locationBubble, locationName, detailSentence1, detailSentence2, photoCredit, photographerLink, liveRegion;
 
 let currentLocation = null;
 let currentPhraseIndex = 0;
 let terminalVisible = false;
 let detailsVisible = false;
 let audioPlaying = false;
+
+// Performance optimization variables
+let imageCache = new Map();
+let preloadedImages = new Set();
+let isLoading = false;
+let currentLocationIndex = 0;
+let allLocations = [];
+
+// Audio control variables
+let isMuted = false;
+let audioVolume = 1.0;
+
+// Touch gesture variables
+let touchStartX = 0;
+let touchStartY = 0;
+let touchStartTime = 0;
+let isLongPress = false;
+
+// Accessibility functions
+function announceToScreenReader(message) {
+    if (liveRegion) {
+        liveRegion.textContent = message;
+        // Clear after announcement to allow repeated announcements
+        setTimeout(() => {
+            liveRegion.textContent = '';
+        }, 1000);
+    }
+}
+
+function updateAriaExpanded(element, expanded) {
+    element.setAttribute('aria-expanded', expanded.toString());
+}
+
+// Performance optimization functions
+function isMobileDevice() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
+
+function preloadImage(url) {
+    return new Promise((resolve, reject) => {
+        if (imageCache.has(url)) {
+            resolve(imageCache.get(url));
+            return;
+        }
+        
+        const img = new Image();
+        img.onload = () => {
+            imageCache.set(url, img);
+            preloadedImages.add(url);
+            resolve(img);
+        };
+        img.onerror = reject;
+        img.src = getResponsiveImageUrl(url);
+    });
+}
+
+function preloadNextImages(currentIndex, locations) {
+    // Preload next 3 images for smooth transitions
+    const preloadCount = 3;
+    for (let i = 1; i <= preloadCount; i++) {
+        const nextIndex = (currentIndex + i) % locations.length;
+        const nextLocation = locations[nextIndex];
+        if (nextLocation && !preloadedImages.has(nextLocation.image)) {
+            preloadImage(nextLocation.image).catch(() => {
+                // Silently handle preload failures
+            });
+        }
+    }
+}
+
+function showLoadingState() {
+    if (isLoading) return; // Prevent multiple loading states
+    
+    isLoading = true;
+    document.body.style.filter = 'blur(2px)';
+    document.body.style.transition = 'filter 0.3s ease';
+    
+    // Add loading indicator
+    const loadingIndicator = document.createElement('div');
+    loadingIndicator.id = 'loading-indicator';
+    loadingIndicator.innerHTML = `
+        <div style="
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            z-index: 10000;
+            backdrop-filter: blur(10px);
+        ">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <div style="
+                    width: 20px;
+                    height: 20px;
+                    border: 2px solid #ffffff40;
+                    border-top: 2px solid white;
+                    border-radius: 50%;
+                    animation: spin 1s linear infinite;
+                "></div>
+                Loading next location...
+            </div>
+        </div>
+        <style>
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+        </style>
+    `;
+    document.body.appendChild(loadingIndicator);
+}
+
+function hideLoadingState() {
+    isLoading = false;
+    document.body.style.filter = 'none';
+    const loadingIndicator = document.getElementById('loading-indicator');
+    if (loadingIndicator) {
+        loadingIndicator.remove();
+    }
+}
+
+function triggerHapticFeedback(pattern = 50) {
+    if ('vibrate' in navigator && isMobileDevice()) {
+        navigator.vibrate(pattern);
+    }
+}
+
+// Audio control functions
+function toggleMute() {
+    isMuted = !isMuted;
+    const muteButton = document.getElementById('mute-button');
+    if (muteButton) {
+        muteButton.textContent = isMuted ? '🔇' : '🔊';
+        muteButton.setAttribute('aria-label', isMuted ? 'Unmute audio' : 'Mute audio');
+    }
+    
+    // Stop current speech if muting
+    if (isMuted) {
+        speechSynthesis.cancel();
+    }
+}
+
+function updateVolume(volume) {
+    audioVolume = parseFloat(volume);
+    // Volume will be applied in speakPhrase function
+}
+
+// Touch gesture handlers
+function handleTouchStart(e) {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+    touchStartTime = Date.now();
+    isLongPress = false;
+    
+    // Set up long press detection
+    setTimeout(() => {
+        if (Date.now() - touchStartTime >= 500) {
+            isLongPress = true;
+            triggerHapticFeedback([100, 50, 100]); // Long press feedback
+        }
+    }, 500);
+}
+
+function handleTouchEnd(e) {
+    const touchEndX = e.changedTouches[0].clientX;
+    const touchEndY = e.changedTouches[0].clientY;
+    const touchDuration = Date.now() - touchStartTime;
+    
+    const deltaX = touchEndX - touchStartX;
+    const deltaY = touchEndY - touchStartY;
+    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+    
+    // Ignore if touch moved too much (likely scrolling)
+    if (distance > 100) return;
+    
+    // Handle long press
+    if (isLongPress) {
+        speakPhrase(); // Repeat current phrase
+        return;
+    }
+    
+    // Handle swipe gestures
+    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
+        triggerHapticFeedback();
+        getRandomPhrase(); // Both left and right swipes get new phrase
+    } else if (deltaY < -50) {
+        // Swipe up - open help
+        if (!terminalVisible) {
+            triggerHapticFeedback();
+            toggleTerminal();
+        }
+    } else if (deltaY > 50) {
+        // Swipe down - close help
+        if (terminalVisible) {
+            triggerHapticFeedback();
+            toggleTerminal();
+        }
+    }
+}
 
 function updateAll() {
     if (!currentLocation) return;
@@ -119,6 +322,9 @@ function updateAll() {
         if (detailsVisible) {
             detailSentence1.textContent = `In ${currentLocation.location}, the language is ${currentLocation.lang_name}.`;
             detailSentence2.textContent = `"${phrase.text}" means ${phrase.meaning || 'N/A'}.`;
+            document.getElementById('details').setAttribute('aria-hidden', 'false');
+        } else {
+            document.getElementById('details').setAttribute('aria-hidden', 'true');
         }
     }
 
@@ -136,22 +342,80 @@ function updateAll() {
     photographerLink.href = currentLocation.photographerUrl;
     photographerLink.setAttribute('rel', 'noopener noreferrer');
     photographerLink.setAttribute('target', '_blank');
+    
+    // Update progress indicator
+    const currentLocationSpan = document.getElementById('current-location');
+    const totalLocationsSpan = document.getElementById('total-locations');
+    if (currentLocationSpan && totalLocationsSpan) {
+        currentLocationSpan.textContent = (currentLocationIndex + 1).toString();
+        totalLocationsSpan.textContent = allLocations.length.toString();
+    }
 }
 
 function getRandomPhrase() {
     speechSynthesis.cancel();
 
-    currentLocation = allLocations[Math.floor(Math.random() * allLocations.length)];
-
-    // Always pick a different phrase/emoji from the selected location
-    let newPhraseIndex;
+    // Get a random location different from current
+    let newLocation;
+    let newLocationIndex;
     do {
-        newPhraseIndex = Math.floor(Math.random() * currentLocation.phrases.length);
-    } while (newPhraseIndex === currentPhraseIndex && currentLocation.phrases.length > 1);
-    currentPhraseIndex = newPhraseIndex;
+        newLocationIndex = Math.floor(Math.random() * allLocations.length);
+        newLocation = allLocations[newLocationIndex];
+    } while (newLocation === currentLocation && allLocations.length > 1);
 
-    updateAll();
-    setTimeout(() => speakPhrase(), 200);
+    // Show loading state if image isn't preloaded
+    const imageUrl = getResponsiveImageUrl(newLocation.image);
+    if (!preloadedImages.has(newLocation.image) && !imageCache.has(imageUrl)) {
+        showLoadingState();
+    }
+
+    // Preload the image and update when ready
+    preloadImage(newLocation.image).then(() => {
+        currentLocation = newLocation;
+        currentLocationIndex = newLocationIndex;
+
+        // Always pick a different phrase/emoji from the selected location
+        let newPhraseIndex;
+        do {
+            newPhraseIndex = Math.floor(Math.random() * currentLocation.phrases.length);
+        } while (newPhraseIndex === currentPhraseIndex && currentLocation.phrases.length > 1);
+        currentPhraseIndex = newPhraseIndex;
+
+        updateAll();
+        hideLoadingState();
+        
+        // Preload next images for smooth future transitions
+        preloadNextImages(currentLocationIndex, allLocations);
+        
+        // Add haptic feedback for mobile users
+        triggerHapticFeedback();
+        
+        // Announce new phrase to screen readers
+        const phrase = currentLocation.phrases[currentPhraseIndex];
+        if (!isWhimsicalLocation(currentLocation)) {
+            const announcement = `New phrase: ${phrase.text}, meaning ${phrase.meaning || 'no translation'}, from ${currentLocation.location}`;
+            announceToScreenReader(announcement);
+        } else {
+            announceToScreenReader(`New location: ${currentLocation.location}`);
+        }
+        
+        setTimeout(() => speakPhrase(), 200);
+    }).catch(() => {
+        // Fallback: proceed without preloading
+        hideLoadingState();
+        currentLocation = newLocation;
+        currentLocationIndex = newLocationIndex;
+        
+        let newPhraseIndex;
+        do {
+            newPhraseIndex = Math.floor(Math.random() * currentLocation.phrases.length);
+        } while (newPhraseIndex === currentPhraseIndex && currentLocation.phrases.length > 1);
+        currentPhraseIndex = newPhraseIndex;
+        
+        updateAll();
+        triggerHapticFeedback();
+        setTimeout(() => speakPhrase(), 200);
+    });
 }
 
 function speakPhrase() {
@@ -224,12 +488,13 @@ function speakPhrase() {
 
     setTimeout(() => flyingText.remove(), 2600);
 
-    // Speak if not emoji and has language
-    if (!isEmoji && currentLocation.lang && 'speechSynthesis' in window) {
+    // Speak if not emoji, has language, and audio is not muted
+    if (!isEmoji && currentLocation.lang && 'speechSynthesis' in window && !isMuted) {
         audioPlaying = true;
         const utterance = new SpeechSynthesisUtterance(phrase.text);
         utterance.lang = currentLocation.lang;
-        utterance.rate = 1.0;
+        utterance.rate = isMobileDevice() ? 0.9 : 1.0;
+        utterance.volume = audioVolume;
 
         // Lazy initialize voices only when speech is first used
         if (cachedVoices.length === 0) updateVoicesCache();
@@ -256,25 +521,53 @@ function toggleDetails() {
     if (detailsVisible) {
         locationBubble.classList.add('expanded');
         details.classList.add('show');
+        updateAriaExpanded(locationBubble, true);
+        details.setAttribute('aria-hidden', 'false');
         updateAll(); // Refresh details
+        announceToScreenReader('Location details expanded');
     } else {
         locationBubble.classList.remove('expanded');
         details.classList.remove('show');
+        updateAriaExpanded(locationBubble, false);
+        details.setAttribute('aria-hidden', 'true');
+        announceToScreenReader('Location details collapsed');
     }
 }
 
 function toggleTerminal() {
     terminalVisible = !terminalVisible;
     const terminal = document.getElementById('terminal');
-    terminal.classList.toggle('show', terminalVisible);
+    const terminalDialog = document.getElementById('terminal-dialog');
+    
+    if (terminalVisible) {
+        terminal.classList.add('show');
+        terminalDialog.setAttribute('aria-hidden', 'false');
+        // Focus the close button for keyboard users
+        const closeButton = terminal.querySelector('.terminal-close');
+        if (closeButton) {
+            closeButton.focus();
+        }
+        announceToScreenReader('Help dialog opened');
+    } else {
+        terminal.classList.remove('show');
+        terminalDialog.setAttribute('aria-hidden', 'true');
+        announceToScreenReader('Help dialog closed');
+    }
 }
 
 // Event listeners
 document.addEventListener('keydown', (e) => {
+    // Handle terminal close with Escape key
+    if (e.key === 'Escape' && terminalVisible) {
+        e.preventDefault();
+        toggleTerminal();
+        return;
+    }
+    
     if (e.key === 'ArrowRight' || e.key === 'ArrowLeft' || e.key === ' ') {
         e.preventDefault();
         getRandomPhrase();
-    } else if (e.key === '?') {
+    } else if (e.key === '?' || e.key === 'h' || e.key === 'H') {
         e.preventDefault();
         toggleTerminal();
     } else if (e.key === '.') {
@@ -292,8 +585,22 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
+// Handle location bubble keyboard interaction
+document.addEventListener('keydown', (e) => {
+    if (e.target.id === 'location-bubble' && (e.key === 'Enter' || e.key === ' ')) {
+        e.preventDefault();
+        toggleDetails();
+    }
+});
+
 document.body.addEventListener('click', (e) => {
     if (e.target.tagName === 'A' || e.target.closest('.terminal')) return;
+    
+    // Handle terminal close button
+    if (e.target.classList.contains('terminal-close')) {
+        toggleTerminal();
+        return;
+    }
 
     // Check if click is on location bubble
     if (e.target.closest('.location-bubble')) {
@@ -306,6 +613,9 @@ document.body.addEventListener('click', (e) => {
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
+    // Initialize allLocations array
+    allLocations = [...languageExplorer.countries, ...languageExplorer.whimsical];
+    
     // Cache DOM elements for performance
     locationBubble = document.getElementById('location-bubble');
     locationName = document.getElementById('location-name');
@@ -313,6 +623,45 @@ document.addEventListener('DOMContentLoaded', () => {
     detailSentence2 = document.getElementById('detail-sentence2');
     photoCredit = document.getElementById('photo-credit');
     photographerLink = document.getElementById('photographer-link');
+    liveRegion = document.getElementById('live-region');
+
+    // Set initial ARIA states
+    const terminalDialog = document.getElementById('terminal-dialog');
+    if (terminalDialog) {
+        terminalDialog.setAttribute('aria-hidden', 'true');
+    }
+
+    // Initialize audio controls
+    const muteButton = document.getElementById('mute-button');
+    const volumeSlider = document.getElementById('volume-slider');
+    
+    if (muteButton) {
+        muteButton.addEventListener('click', toggleMute);
+    }
+    
+    if (volumeSlider) {
+        volumeSlider.addEventListener('input', (e) => updateVolume(e.target.value));
+    }
+
+    // Add touch event listeners for mobile gestures
+    if (isMobileDevice()) {
+        document.addEventListener('touchstart', handleTouchStart, { passive: true });
+        document.addEventListener('touchend', handleTouchEnd, { passive: true });
+        
+        // Add mobile-specific instructions to terminal
+        const terminal = document.getElementById('terminal');
+        if (terminal) {
+            const mobileInstructions = document.createElement('div');
+            mobileInstructions.innerHTML = `
+                <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.2);">
+                    <div class="terminal-line"><span class="terminal-prompt">Mobile:</span>Swipe left/right for new phrases</div>
+                    <div class="terminal-line"><span class="terminal-prompt">Gestures:</span>Swipe up for help, down to close</div>
+                    <div class="terminal-line"><span class="terminal-prompt">Long press:</span>Repeat current phrase</div>
+                </div>
+            `;
+            terminal.appendChild(mobileInstructions);
+        }
+    }
 
     // Voice cache will be initialized lazily when first needed
 
