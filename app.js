@@ -210,7 +210,7 @@ function speakPhrase() {
             'flyThrough 2.5s cubic-bezier(0.1, 0.1, 0.9, 1) forwards';
     }, 50);
 
-    setTimeout(() => flyingText.remove(), 3000);
+    setTimeout(() => flyingText.remove(), 2600);
 
     // Speak if not emoji and has language
     if (!isEmoji && currentLocation.lang && 'speechSynthesis' in window) {
@@ -219,7 +219,7 @@ function speakPhrase() {
         utterance.lang = currentLocation.lang;
         utterance.rate = 1.0;
 
-        // Find the best voice for the language using cached voices
+        // Lazy initialize voices only when speech is first used
         if (cachedVoices.length === 0) updateVoicesCache();
         const langCode = currentLocation.lang.split('-')[0];
         const exactMatch = cachedVoices.find(voice => voice.lang === currentLocation.lang);
@@ -302,8 +302,7 @@ document.addEventListener('DOMContentLoaded', () => {
     photoCredit = document.getElementById('photo-credit');
     photographerLink = document.getElementById('photographer-link');
 
-    // Initialize voice cache
-    updateVoicesCache();
+    // Voice cache will be initialized lazily when first needed
 
     // Start the experience
     getRandomPhrase();
