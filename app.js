@@ -954,6 +954,30 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Add build info to terminal
+    const terminal = document.getElementById('terminal');
+    if (terminal) {
+        const buildSection = document.createElement('div');
+        buildSection.style.marginTop = '1.5rem';
+        buildSection.style.paddingTop = '1rem';
+        buildSection.style.borderTop = '1px solid rgba(255,255,255,0.2)';
+        
+        const buildLine = document.createElement('div');
+        buildLine.className = 'terminal-line';
+        
+        const buildPrompt = document.createElement('span');
+        buildPrompt.className = 'terminal-prompt';
+        buildPrompt.textContent = 'Build:';
+        
+        const buildInfo = document.createElement('span');
+        buildInfo.textContent = `f1379ec • 2025-08-22 23:23`;
+        
+        buildLine.appendChild(buildPrompt);
+        buildLine.appendChild(buildInfo);
+        buildSection.appendChild(buildLine);
+        terminal.appendChild(buildSection);
+    }
+
     // Voice cache will be initialized lazily when first needed
 
     // Start the experience

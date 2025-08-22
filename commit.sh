@@ -60,6 +60,15 @@ if [ "$FULL_TEST" = true ]; then
     fi
 fi
 
+echo "🚀 Preparing build info..."
+
+# Get build info
+BUILD_HASH=$(git rev-parse --short HEAD)
+BUILD_DATE=$(date +"%Y-%m-%d %H:%M")
+
+# Update build info in app.js
+sed -i '' "s/BUILD_INFO_PLACEHOLDER/${BUILD_HASH} • ${BUILD_DATE}/" app.js
+
 echo "🚀 Committing..."
 git add .
 git commit -m "$1"
