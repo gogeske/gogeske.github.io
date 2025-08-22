@@ -66,8 +66,8 @@ echo "🚀 Preparing build info..."
 BUILD_HASH=$(git rev-parse --short HEAD)
 BUILD_DATE=$(date +"%Y-%m-%d %H:%M")
 
-# Update build info in app.js
-sed -i '' "s/BUILD_INFO_PLACEHOLDER/${BUILD_HASH} • ${BUILD_DATE}/" app.js
+# Update build info in HTML
+sed -i '' "s/BUILD_INFO_PLACEHOLDER/${BUILD_HASH} • ${BUILD_DATE}/" index.html
 
 echo "🚀 Committing..."
 git add .

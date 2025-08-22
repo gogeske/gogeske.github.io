@@ -802,7 +802,7 @@ document.addEventListener('keydown', (e) => {
 
     if (e.key === 'ArrowRight' || e.key === ' ') {
         e.preventDefault();
-        getRandomPhrase();
+        goForwardInHistory();
     } else if (e.key === 'ArrowLeft') {
         e.preventDefault();
         goBackInHistory();
@@ -924,58 +924,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.addEventListener('touchmove', handleTouchMove, { passive: true });
         document.addEventListener('touchend', handleTouchEnd, { passive: true });
 
-        // Add mobile-specific instructions to terminal
-        const terminal = document.getElementById('terminal');
-        if (terminal) {
-            const mobileSection = document.createElement('div');
-            mobileSection.className = 'mobile-instructions';
-
-            // Create mobile instruction lines
-            const instructions = [
-                { prompt: 'Swipe:', text: 'Right for next, left to go back' },
-                { prompt: 'Help:', text: 'Swipe up to open, down to close' },
-                { prompt: 'Repeat:', text: 'Long press anywhere' }
-            ];
-
-            instructions.forEach(instruction => {
-                const line = document.createElement('div');
-                line.className = 'terminal-line';
-
-                const prompt = document.createElement('span');
-                prompt.className = 'terminal-prompt';
-                prompt.textContent = instruction.prompt;
-
-                line.appendChild(prompt);
-                line.appendChild(document.createTextNode(instruction.text));
-                mobileSection.appendChild(line);
-            });
-
-            terminal.appendChild(mobileSection);
-        }
-    }
-
-    // Add build info to terminal
-    const terminal = document.getElementById('terminal');
-    if (terminal) {
-        const buildSection = document.createElement('div');
-        buildSection.style.marginTop = '1.5rem';
-        buildSection.style.paddingTop = '1rem';
-        buildSection.style.borderTop = '1px solid rgba(255,255,255,0.2)';
-        
-        const buildLine = document.createElement('div');
-        buildLine.className = 'terminal-line';
-        
-        const buildPrompt = document.createElement('span');
-        buildPrompt.className = 'terminal-prompt';
-        buildPrompt.textContent = 'Build:';
-        
-        const buildInfo = document.createElement('span');
-        buildInfo.textContent = `f1379ec • 2025-08-22 23:23`;
-        
-        buildLine.appendChild(buildPrompt);
-        buildLine.appendChild(buildInfo);
-        buildSection.appendChild(buildLine);
-        terminal.appendChild(buildSection);
     }
 
     // Voice cache will be initialized lazily when first needed
