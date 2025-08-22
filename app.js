@@ -5,20 +5,12 @@ const getResponsiveImageUrl = (baseUrl) => {
     const urlParts = baseUrl.split('?');
     const base = urlParts[0];
 
-    // Get current viewport width to determine appropriate size
-    const width = window.innerWidth;
-    let size;
+    // Get optimal size based on device capabilities
+    const size = getOptimalImageSize();
+    const quality = isLowPowerDevice() ? 'q=50' : 'q=60';
 
-    if (width <= 768) {
-        size = 'w=400';  // Mobile
-    } else if (width <= 1024) {
-        size = 'w=800';  // Tablet
-    } else {
-        size = 'w=1200'; // Desktop
-    }
-
-    // Use WebP format with JPEG fallback and aggressive compression for performance
-    return `${base}?ixlib=rb-4.0.3&auto=format&fit=crop&${size}&fm=webp&q=60`;
+    // Use WebP format with JPEG fallback and device-appropriate compression
+    return `${base}?ixlib=rb-4.0.3&auto=format&fit=crop&${size}&fm=webp&${quality}`;
 };
 
 const languageExplorer = {
@@ -46,7 +38,7 @@ const languageExplorer = {
 
         // High-demand languages expansion
         { lang: 'sw-TZ', lang_name: 'Swahili', location: 'Stone Town, Zanzibar', image: 'https://images.unsplash.com/photo-1544735716-392fe2489ffa', photographer: 'Sergey Pesterev', photographerUrl: 'https://unsplash.com/@sickle', phrases: [{ text: 'Hujambo', meaning: 'Hello (formal)' }, { text: 'Mambo', meaning: 'What\'s up?' }] },
-        { lang: 'he-IL', lang_name: 'Hebrew', location: 'Jerusalem, Israel', image: 'https://images.unsplash.com/photo-1544966503-7cc5ac882d5f', photographer: 'Sander Crombach', photographerUrl: 'https://unsplash.com/@sandercrombach', phrases: [{ text: 'שלום', meaning: 'Hello/Peace' }, { text: 'מה נשמע?', meaning: 'What\'s up?' }] },
+        { lang: 'he-IL', lang_name: 'Hebrew', location: 'Jerusalem, Israel', image: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5', photographer: 'Davi Costa', photographerUrl: 'https://unsplash.com/@davicosta', phrases: [{ text: 'שלום', meaning: 'Hello/Peace' }, { text: 'מה נשמע?', meaning: 'What\'s up?' }] },
         { lang: 'el-GR', lang_name: 'Greek', location: 'Athens, Greece', image: 'https://images.unsplash.com/photo-1555993539-1732b0258235', photographer: 'Arthur Yeti', photographerUrl: 'https://unsplash.com/@arthuryeti', phrases: [{ text: 'Γεια σας', meaning: 'Hello (formal)' }, { text: 'Γεια σου', meaning: 'Hello (informal)' }] },
         { lang: 'sv-SE', lang_name: 'Swedish', location: 'Stockholm, Sweden', image: 'https://images.unsplash.com/photo-1509356843151-3e7d96241e11', photographer: 'Raphael Andres', photographerUrl: 'https://unsplash.com/@raphaelandres', phrases: [{ text: 'Hej', meaning: 'Hello' }, { text: 'Tjena', meaning: 'Hi (casual)' }] },
         { lang: 'no-NO', lang_name: 'Norwegian', location: 'Oslo, Norway', image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96', photographer: 'Sven-Mieke Weinmann', photographerUrl: 'https://unsplash.com/@sxoxm', phrases: [{ text: 'Hei', meaning: 'Hello' }, { text: 'Halla', meaning: 'Hi (casual)' }] },
@@ -58,7 +50,7 @@ const languageExplorer = {
         { lang: 'hr-HR', lang_name: 'Croatian', location: 'Zagreb, Croatia', image: 'https://images.unsplash.com/photo-1539650116574-75c0c6d73f6e', photographer: 'Tapio Haaja', photographerUrl: 'https://unsplash.com/@tapiohaaja', phrases: [{ text: 'Bok', meaning: 'Hello' }, { text: 'Dobar dan', meaning: 'Good day' }] },
         { lang: 'uk-UA', lang_name: 'Ukrainian', location: 'Kyiv, Ukraine', image: 'https://images.unsplash.com/photo-1541849546-216549ae216d', photographer: 'Rodrigo Ardilha', photographerUrl: 'https://unsplash.com/@rodrigoardilha', phrases: [{ text: 'Привіт', meaning: 'Hello' }, { text: 'Добрий день', meaning: 'Good day' }] },
         { lang: 'fa-IR', lang_name: 'Persian', location: 'Isfahan, Iran', image: 'https://images.unsplash.com/photo-1544735716-392fe2489ffa', photographer: 'Sergey Pesterev', photographerUrl: 'https://unsplash.com/@sickle', phrases: [{ text: 'سلام', meaning: 'Hello' }, { text: 'درود', meaning: 'Greetings' }] },
-        { lang: 'ur-PK', lang_name: 'Urdu', location: 'Karachi, Pakistan', image: 'https://images.unsplash.com/photo-1544966503-7cc5ac882d5f', photographer: 'Sander Crombach', photographerUrl: 'https://unsplash.com/@sandercrombach', phrases: [{ text: 'السلام علیکم', meaning: 'Peace be upon you' }, { text: 'آداب', meaning: 'Greetings' }] },
+        { lang: 'ur-PK', lang_name: 'Urdu', location: 'Karachi, Pakistan', image: 'https://images.unsplash.com/photo-1570168007204-dfb528c6958f', photographer: 'Sonika Agarwal', photographerUrl: 'https://unsplash.com/@sonika_agarwal', phrases: [{ text: 'السلام علیکم', meaning: 'Peace be upon you' }, { text: 'آداب', meaning: 'Greetings' }] },
         { lang: 'bn-BD', lang_name: 'Bengali', location: 'Dhaka, Bangladesh', image: 'https://images.unsplash.com/photo-1555993539-1732b0258235', photographer: 'Arthur Yeti', photographerUrl: 'https://unsplash.com/@arthuryeti', phrases: [{ text: 'নমস্কার', meaning: 'Hello' }, { text: 'আসসালামু আলাইকুম', meaning: 'Peace be upon you' }] }
     ],
 
@@ -104,6 +96,146 @@ function updateVoicesCache() {
     if ('speechSynthesis' in window) {
         cachedVoices = speechSynthesis.getVoices();
     }
+}
+
+// Enhanced fallback voice selection for better language support
+function findFallbackVoice(targetLang) {
+    const fallbackMap = {
+        'ur-PK': ['hi-IN', 'ar-SA'], // Urdu -> Hindi or Arabic
+        'fa-IR': ['ar-SA', 'ur-PK'], // Persian -> Arabic or Urdu
+        'bn-BD': ['hi-IN', 'ur-PK'], // Bengali -> Hindi or Urdu
+        'sw-TZ': ['ar-SA', 'en-US'], // Swahili -> Arabic or English
+        'he-IL': ['ar-SA', 'en-US'], // Hebrew -> Arabic or English
+    };
+    
+    const fallbacks = fallbackMap[targetLang];
+    if (!fallbacks) return null;
+    
+    for (const fallbackLang of fallbacks) {
+        const voice = cachedVoices.find(voice => voice.lang === fallbackLang);
+        if (voice) return voice;
+    }
+    
+    return null;
+}
+
+// Fallback image selection for failed image loads
+function getFallbackImage(location) {
+    // Generic fallback images by region/theme
+    const fallbackImages = {
+        // Regional fallbacks
+        'Middle East': 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c',
+        'Asia': 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf',
+        'Europe': 'https://images.unsplash.com/photo-1431274172761-fca41d930114',
+        'Africa': 'https://images.unsplash.com/photo-1544735716-392fe2489ffa',
+        'Americas': 'https://images.unsplash.com/photo-1518105779142-d975f22f1b0a',
+        // Generic fallback
+        'default': 'https://images.unsplash.com/photo-1614730321146-b6fa6a46bcb4'
+    };
+    
+    // Determine region based on location
+    const locationText = location.location.toLowerCase();
+    if (locationText.includes('dubai') || locationText.includes('israel') || locationText.includes('iran') || locationText.includes('pakistan')) {
+        return getResponsiveImageUrl(fallbackImages['Middle East']);
+    } else if (locationText.includes('tokyo') || locationText.includes('seoul') || locationText.includes('beijing') || locationText.includes('mumbai')) {
+        return getResponsiveImageUrl(fallbackImages['Asia']);
+    } else if (locationText.includes('paris') || locationText.includes('berlin') || locationText.includes('rome') || locationText.includes('amsterdam')) {
+        return getResponsiveImageUrl(fallbackImages['Europe']);
+    } else if (locationText.includes('zanzibar') || locationText.includes('africa')) {
+        return getResponsiveImageUrl(fallbackImages['Africa']);
+    } else if (locationText.includes('mexico') || locationText.includes('brazil') || locationText.includes('argentina')) {
+        return getResponsiveImageUrl(fallbackImages['Americas']);
+    }
+    
+    return getResponsiveImageUrl(fallbackImages['default']);
+}
+
+// Speech synthesis retry functions for better error recovery
+function retryWithSystemVoice(phrase) {
+    if (audioPlaying) return; // Prevent multiple retries
+    
+    setTimeout(() => {
+        const utterance = new SpeechSynthesisUtterance(phrase.text);
+        utterance.voice = null; // Use system default
+        utterance.rate = 0.8;
+        utterance.pitch = 1;
+        utterance.volume = 1;
+        
+        utterance.onstart = () => {
+            console.log('Retry with system voice successful');
+            audioPlaying = true;
+        };
+        
+        utterance.onend = () => {
+            audioPlaying = false;
+        };
+        
+        utterance.onerror = () => {
+            console.log('System voice retry also failed');
+            audioPlaying = false;
+        };
+        
+        speechSynthesis.speak(utterance);
+    }, 500);
+}
+
+function retryWithFallbackText(phrase) {
+    if (audioPlaying) return;
+    
+    // Try with just "Hello" in English as ultimate fallback
+    setTimeout(() => {
+        const utterance = new SpeechSynthesisUtterance('Hello');
+        utterance.lang = 'en-US';
+        utterance.rate = 0.8;
+        
+        utterance.onstart = () => {
+            console.log('Fallback text retry successful');
+            audioPlaying = true;
+        };
+        
+        utterance.onend = () => {
+            audioPlaying = false;
+        };
+        
+        utterance.onerror = () => {
+            console.log('All speech synthesis attempts failed');
+            audioPlaying = false;
+        };
+        
+        speechSynthesis.speak(utterance);
+    }, 500);
+}
+
+function retryWithFallbackVoice(phrase, targetLang) {
+    if (audioPlaying) return;
+    
+    const fallbackVoice = findFallbackVoice(targetLang);
+    if (!fallbackVoice) {
+        retryWithSystemVoice(phrase);
+        return;
+    }
+    
+    setTimeout(() => {
+        const utterance = new SpeechSynthesisUtterance(phrase.text);
+        utterance.voice = fallbackVoice;
+        utterance.rate = 0.8;
+        
+        utterance.onstart = () => {
+            console.log(`Fallback voice retry successful with ${fallbackVoice.name}`);
+            audioPlaying = true;
+        };
+        
+        utterance.onend = () => {
+            audioPlaying = false;
+        };
+        
+        utterance.onerror = () => {
+            console.log('Fallback voice retry failed, trying system voice');
+            retryWithSystemVoice(phrase);
+        };
+        
+        speechSynthesis.speak(utterance);
+    }, 500);
 }
 
 // Cache DOM elements for performance
@@ -276,9 +408,35 @@ function updateAriaExpanded(element, expanded) {
     element.setAttribute('aria-expanded', expanded.toString());
 }
 
-// Performance optimization functions
+// Enhanced mobile device detection and optimization
 function isMobileDevice() {
-    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+           (navigator.maxTouchPoints && navigator.maxTouchPoints > 2) ||
+           window.matchMedia('(pointer: coarse)').matches;
+}
+
+function isLowPowerDevice() {
+    // Detect older or lower-powered devices
+    return navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 2 ||
+           navigator.deviceMemory && navigator.deviceMemory <= 2 ||
+           /iPhone [5-7]|iPad [2-4]|Android [4-6]/i.test(navigator.userAgent);
+}
+
+function getOptimalImageSize() {
+    const width = window.innerWidth;
+    const pixelRatio = window.devicePixelRatio || 1;
+    const isLowPower = isLowPowerDevice();
+    
+    if (isLowPower) {
+        // Use smaller images for low-power devices
+        return width <= 768 ? 'w=400' : 'w=600';
+    } else if (width <= 768) {
+        return pixelRatio > 1 ? 'w=800' : 'w=400';  // Retina mobile
+    } else if (width <= 1024) {
+        return pixelRatio > 1 ? 'w=1200' : 'w=800'; // Retina tablet
+    } else {
+        return pixelRatio > 1 ? 'w=1600' : 'w=1200'; // Retina desktop
+    }
 }
 
 function preloadImage(url) {
@@ -388,8 +546,9 @@ function handleTouchMove(e) {
     const deltaY = touchCurrentY - touchStartY;
     const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
 
-    // Only start visual feedback if we've moved enough
-    if (distance > 20) {
+    // Only start visual feedback if we've moved enough (responsive threshold)
+    const movementThreshold = getResponsiveThreshold(1.25); // 1.25rem
+    if (distance > movementThreshold) {
         isSwipeInProgress = true;
 
         // Determine swipe direction and add visual feedback
@@ -409,6 +568,39 @@ function handleTouchMove(e) {
             }
         }
     }
+}
+
+// Helper function to calculate responsive thresholds based on viewport
+function getResponsiveThreshold(baseRem = 2) {
+    // Convert rem to pixels based on root font size (typically 16px)
+    const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+    return baseRem * rootFontSize;
+}
+
+// Enhanced top edge detection for cross-platform compatibility
+function isTopEdgeSwipe(startY, threshold = null) {
+    // Account for different device characteristics
+    const baseThreshold = getResponsiveThreshold(2); // 2rem default
+    let adjustedThreshold = threshold || baseThreshold;
+    
+    // Adjust for different devices and browsers
+    if (isMobileDevice()) {
+        // Mobile devices may have status bars, notches, etc.
+        const safeAreaTop = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--safe-area-inset-top') || '0');
+        adjustedThreshold = Math.max(adjustedThreshold, safeAreaTop + baseThreshold);
+        
+        // iOS Safari has different behavior
+        if (/iPhone|iPad/i.test(navigator.userAgent)) {
+            adjustedThreshold *= 1.5; // More generous threshold for iOS
+        }
+        
+        // Android Chrome may have different touch behavior
+        if (/Android/i.test(navigator.userAgent)) {
+            adjustedThreshold *= 1.2; // Slightly more generous for Android
+        }
+    }
+    
+    return startY <= adjustedThreshold;
 }
 
 function handleTouchEnd(e) {
@@ -433,8 +625,9 @@ function handleTouchEnd(e) {
         return;
     }
 
-    // Handle swipe gestures with improved thresholds
-    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 30) {
+    // Handle swipe gestures with responsive thresholds
+    const swipeThreshold = getResponsiveThreshold(1.875); // 1.875rem (30px equivalent)
+    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > swipeThreshold) {
         triggerHapticFeedback();
         if (deltaX > 0) {
             // Swipe right - forward in history or new random phrase
@@ -450,36 +643,33 @@ function handleTouchEnd(e) {
                 goBackInHistory();
             }, 150);
         }
-    } else if (Math.abs(deltaY) > 30) {
-        if (deltaY < 0) {
-            // Swipe up - open help
-            if (!terminalVisible) {
-                triggerHapticFeedback();
-                swipeAnimationTimeout = setTimeout(() => {
-                    clearSwipeAnimation();
-                    toggleTerminal();
-                }, 150);
-            } else {
+    } else if (Math.abs(deltaY) > swipeThreshold) {
+        // Check for top-edge swipe down to open terminal
+        if (deltaY > 0 && isTopEdgeSwipe(touchStartY) && !terminalVisible) {
+            // Swipe down from top edge - open terminal
+            triggerHapticFeedback();
+            swipeAnimationTimeout = setTimeout(() => {
                 clearSwipeAnimation();
-            }
+                toggleTerminal();
+            }, 150);
+        } else if (deltaY < 0 && terminalVisible) {
+            // Swipe up when terminal is open - close terminal
+            triggerHapticFeedback();
+            swipeAnimationTimeout = setTimeout(() => {
+                clearSwipeAnimation();
+                toggleTerminal();
+            }, 150);
         } else {
-            // Swipe down - close help
-            if (terminalVisible) {
-                triggerHapticFeedback();
-                swipeAnimationTimeout = setTimeout(() => {
-                    clearSwipeAnimation();
-                    toggleTerminal();
-                }, 150);
-            } else {
-                clearSwipeAnimation();
-            }
+            // Other vertical swipes - just clear animation
+            clearSwipeAnimation();
         }
     } else {
         // No significant swipe, just clear animation
         clearSwipeAnimation();
 
         // Handle tap if it was a short touch with minimal movement
-        if (distance < 20 && touchDuration < 300) {
+        const tapThreshold = getResponsiveThreshold(1.25); // 1.25rem
+        if (distance < tapThreshold && touchDuration < 300) {
             speakPhrase(); // Tap to repeat phrase
         }
     }
@@ -502,8 +692,22 @@ function updateAll() {
     };
     testImage.onerror = () => {
         console.log('Image failed to load:', imageUrl);
-        // Keep the CSS gradient fallback
-        document.body.style.backgroundImage = 'none';
+        // Try a fallback image first, then gradient
+        const fallbackImageUrl = getFallbackImage(currentLocation);
+        if (fallbackImageUrl && fallbackImageUrl !== imageUrl) {
+            const fallbackTest = new Image();
+            fallbackTest.onload = () => {
+                document.body.style.backgroundImage = `url('${fallbackImageUrl}')`;
+            };
+            fallbackTest.onerror = () => {
+                // Final fallback to gradient
+                document.body.style.backgroundImage = 'none';
+            };
+            fallbackTest.src = fallbackImageUrl;
+        } else {
+            // Keep the CSS gradient fallback
+            document.body.style.backgroundImage = 'none';
+        }
     };
     testImage.src = imageUrl;
 
@@ -631,6 +835,8 @@ function speakPhrase() {
 
     const phrase = currentLocation.phrases[currentPhraseIndex];
     const isEmoji = /^[\u{1F000}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]+$/u.test(phrase.text);
+    
+    console.log('Attempting to speak:', phrase.text, 'Language:', currentLocation.lang, 'Is emoji:', isEmoji);
 
     // iOS audio unlock - create a dummy utterance first if needed
     if (isMobileDevice() && 'speechSynthesis' in window && !window.speechSynthesisUnlocked) {
@@ -638,6 +844,7 @@ function speakPhrase() {
         dummyUtterance.volume = 0;
         speechSynthesis.speak(dummyUtterance);
         window.speechSynthesisUnlocked = true;
+        console.log('iOS audio unlocked in speakPhrase');
     }
 
     // Create flying text
@@ -713,40 +920,148 @@ function speakPhrase() {
 
         const utterance = new SpeechSynthesisUtterance(phrase.text);
         utterance.lang = currentLocation.lang;
-        utterance.rate = isMobileDevice() ? 0.9 : 1.0;
+        utterance.rate = isMobileDevice() ? 0.8 : 1.0; // Slower rate for iOS
         utterance.volume = 1.0;
         utterance.pitch = 1.0;
 
         // Lazy initialize voices only when speech is first used
         if (cachedVoices.length === 0) updateVoicesCache();
+        
+        // Enhanced voice selection with multiple fallback strategies
         const langCode = currentLocation.lang.split('-')[0];
-        const exactMatch = cachedVoices.find(voice => voice.lang === currentLocation.lang);
-        const langMatch = cachedVoices.find(voice => voice.lang.startsWith(langCode));
-
-        if (exactMatch) {
-            utterance.voice = exactMatch;
-        } else if (langMatch) {
-            utterance.voice = langMatch;
+        const countryCode = currentLocation.lang.split('-')[1];
+        
+        // Try multiple matching strategies in order of preference
+        let selectedVoice = null;
+        
+        // 1. Exact language-country match (e.g., 'en-US')
+        selectedVoice = cachedVoices.find(voice => voice.lang === currentLocation.lang);
+        
+        // 2. Same language, different country (e.g., 'en-GB' for 'en-US')
+        if (!selectedVoice) {
+            selectedVoice = cachedVoices.find(voice => voice.lang.startsWith(langCode + '-'));
+        }
+        
+        // 3. Language code only (e.g., 'en' for 'en-US')
+        if (!selectedVoice) {
+            selectedVoice = cachedVoices.find(voice => voice.lang.startsWith(langCode));
+        }
+        
+        // 4. Default voice for the language (often marked as default)
+        if (!selectedVoice) {
+            selectedVoice = cachedVoices.find(voice => 
+                voice.lang.startsWith(langCode) && voice.default
+            );
+        }
+        
+        // 5. Any voice containing the language code
+        if (!selectedVoice) {
+            selectedVoice = cachedVoices.find(voice => 
+                voice.lang.toLowerCase().includes(langCode.toLowerCase())
+            );
         }
 
+        if (selectedVoice) {
+            utterance.voice = selectedVoice;
+            console.log(`Using voice: ${selectedVoice.name} (${selectedVoice.lang}) for ${currentLocation.lang}`);
+        } else {
+            // Enhanced fallback: try to find a related language voice
+            const fallbackVoice = findFallbackVoice(currentLocation.lang);
+            if (fallbackVoice) {
+                utterance.voice = fallbackVoice;
+                console.log(`Using fallback voice: ${fallbackVoice.name} (${fallbackVoice.lang}) for ${currentLocation.lang}`);
+            } else {
+                console.log(`No voice found for ${currentLocation.lang}, using system default`);
+            }
+        }
+
+        utterance.onstart = () => {
+            console.log('Speech started successfully');
+        };
+
         utterance.onend = () => {
+            console.log('Speech completed normally');
             audioPlaying = false;
         };
 
         utterance.onerror = (event) => {
-            console.log('Speech synthesis error:', event.error);
+            console.error('Speech synthesis error:', {
+                error: event.error,
+                type: event.type,
+                text: phrase.text,
+                language: currentLocation.lang,
+                voice: selectedVoice?.name || 'default'
+            });
             audioPlaying = false;
+            
+            // Enhanced error handling with recovery attempts
+            if (event.error === 'network') {
+                console.log('Network error - may be offline or voice unavailable');
+                // Try again with system default voice
+                retryWithSystemVoice(phrase);
+            } else if (event.error === 'synthesis-failed') {
+                console.log('Synthesis failed - text may be unsupported');
+                // Try with simplified text or fallback
+                retryWithFallbackText(phrase);
+            } else if (event.error === 'language-not-supported') {
+                console.log('Language not supported by current voice');
+                // Try with fallback voice
+                retryWithFallbackVoice(phrase, currentLocation.lang);
+            } else {
+                console.log('Speech error - continuing without audio');
+            }
+        };
+
+        utterance.onpause = () => {
+            console.log('Speech paused');
+        };
+
+        utterance.onresume = () => {
+            console.log('Speech resumed');
+        };
+
+        // Add timeout fallback in case speech doesn't start
+        const speechTimeout = setTimeout(() => {
+            if (audioPlaying) {
+                console.log('Speech timeout - resetting audio state');
+                audioPlaying = false;
+                speechSynthesis.cancel();
+            }
+        }, 10000); // 10 second timeout
+
+        // Clear timeout when speech ends normally
+        const originalOnEnd = utterance.onend;
+        const originalOnError = utterance.onerror;
+        
+        utterance.onend = (event) => {
+            clearTimeout(speechTimeout);
+            if (originalOnEnd) originalOnEnd(event);
+        };
+        
+        utterance.onerror = (event) => {
+            clearTimeout(speechTimeout);
+            if (originalOnError) originalOnError(event);
         };
 
         // iOS requires speech to be triggered by user interaction
         // Add a small delay to ensure proper iOS handling
-        if (isMobileDevice()) {
-            setTimeout(() => {
+        try {
+            if (isMobileDevice()) {
+                setTimeout(() => {
+                    console.log('Speaking on iOS with delay');
+                    speechSynthesis.speak(utterance);
+                }, 150);
+            } else {
+                console.log('Speaking on desktop');
                 speechSynthesis.speak(utterance);
-            }, 100);
-        } else {
-            speechSynthesis.speak(utterance);
+            }
+        } catch (error) {
+            console.error('Failed to initiate speech synthesis:', error);
+            audioPlaying = false;
+            clearTimeout(speechTimeout);
         }
+    } else {
+        console.log('Skipping speech - isEmoji:', isEmoji, 'lang:', currentLocation.lang, 'speechSynthesis available:', 'speechSynthesis' in window);
     }
 }
 
@@ -772,21 +1087,22 @@ function toggleDetails() {
 
 function toggleTerminal() {
     terminalVisible = !terminalVisible;
-    const terminal = document.getElementById('terminal');
     const terminalDialog = document.getElementById('terminal-dialog');
 
     if (terminalVisible) {
-        if (terminal) terminal.classList.add('show');
-        if (terminalDialog) terminalDialog.setAttribute('aria-hidden', 'false');
+        if (terminalDialog) {
+            terminalDialog.setAttribute('aria-hidden', 'false');
+        }
         // Focus the close button for keyboard users
-        const closeButton = terminal?.querySelector('.terminal-close');
+        const closeButton = terminalDialog?.querySelector('.terminal-close');
         if (closeButton) {
-            closeButton.focus();
+            setTimeout(() => closeButton.focus(), 300);
         }
         announceToScreenReader('Help dialog opened');
     } else {
-        if (terminal) terminal.classList.remove('show');
-        if (terminalDialog) terminalDialog.setAttribute('aria-hidden', 'true');
+        if (terminalDialog) {
+            terminalDialog.setAttribute('aria-hidden', 'true');
+        }
         announceToScreenReader('Help dialog closed');
     }
 }
@@ -833,18 +1149,39 @@ document.addEventListener('keydown', (e) => {
 });
 
 document.body.addEventListener('click', (e) => {
-    if (e.target.tagName === 'A' || e.target.closest('.terminal')) return;
-
     // Handle terminal close button
     if (e.target.classList.contains('terminal-close')) {
         toggleTerminal();
         return;
     }
 
+    // Check if click is inside terminal content
+    if (e.target.closest('.terminal')) {
+        return; // Don't close terminal or trigger other actions
+    }
+
+    // If terminal is open and click is outside, close it
+    if (terminalVisible && !e.target.closest('#terminal-dialog')) {
+        toggleTerminal();
+        return;
+    }
+
+    // Don't trigger phrase replay if clicking on links
+    if (e.target.tagName === 'A') return;
+
     // Check if click is on location bubble
     if (e.target.closest('.location-bubble')) {
         toggleDetails();
         return;
+    }
+
+    // iOS audio unlock on first interaction
+    if (isMobileDevice() && 'speechSynthesis' in window && !window.speechSynthesisUnlocked) {
+        const dummyUtterance = new SpeechSynthesisUtterance('');
+        dummyUtterance.volume = 0;
+        speechSynthesis.speak(dummyUtterance);
+        window.speechSynthesisUnlocked = true;
+        console.log('iOS audio unlocked via click');
     }
 
     speakPhrase();
@@ -863,8 +1200,53 @@ if ('serviceWorker' in navigator) {
     });
 }
 
+// Cross-platform compatibility initialization
+function initializeCrossPlatformSupport() {
+    // Set CSS custom properties for JavaScript access
+    const root = document.documentElement;
+    
+    // Viewport height fix for mobile browsers
+    const setVH = () => {
+        const vh = window.innerHeight * 0.01;
+        root.style.setProperty('--vh', `${vh}px`);
+    };
+    
+    setVH();
+    window.addEventListener('resize', setVH);
+    window.addEventListener('orientationchange', () => {
+        setTimeout(setVH, 100); // Delay for orientation change
+    });
+    
+    // Feature detection and polyfills
+    if (!window.speechSynthesis) {
+        console.warn('Speech synthesis not supported on this platform');
+    }
+    
+    if (!navigator.vibrate) {
+        // Polyfill for vibration API
+        navigator.vibrate = () => false;
+    }
+    
+    // Performance optimization based on device capabilities
+    if (isLowPowerDevice()) {
+        console.log('Low-power device detected, enabling optimizations');
+        root.style.setProperty('--animation-duration', '0.2s');
+        root.style.setProperty('--blur-amount', '5px');
+    }
+    
+    // Platform-specific optimizations
+    if (/iPhone|iPad/i.test(navigator.userAgent)) {
+        root.classList.add('ios');
+    } else if (/Android/i.test(navigator.userAgent)) {
+        root.classList.add('android');
+    }
+}
+
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
+    // Initialize cross-platform support first
+    initializeCrossPlatformSupport();
+    
     // Initialize allLocations array
     allLocations = [...languageExplorer.countries, ...languageExplorer.whimsical];
 
@@ -899,12 +1281,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // iOS audio initialization - unlock audio on first user interaction
     if (isMobileDevice() && 'speechSynthesis' in window) {
+        console.log('Setting up iOS audio unlock listeners');
+        
         const unlockAudio = () => {
             if (!window.speechSynthesisUnlocked) {
-                const dummyUtterance = new SpeechSynthesisUtterance('');
-                dummyUtterance.volume = 0;
-                speechSynthesis.speak(dummyUtterance);
-                window.speechSynthesisUnlocked = true;
+                console.log('Attempting iOS audio unlock');
+                try {
+                    const dummyUtterance = new SpeechSynthesisUtterance('');
+                    dummyUtterance.volume = 0;
+                    dummyUtterance.rate = 1;
+                    dummyUtterance.pitch = 1;
+                    
+                    dummyUtterance.onstart = () => {
+                        console.log('iOS audio unlock successful');
+                        window.speechSynthesisUnlocked = true;
+                    };
+                    
+                    dummyUtterance.onerror = (e) => {
+                        console.log('iOS audio unlock error:', e);
+                    };
+                    
+                    speechSynthesis.speak(dummyUtterance);
+                    
+                    // Fallback - assume unlocked after attempt
+                    setTimeout(() => {
+                        window.speechSynthesisUnlocked = true;
+                    }, 100);
+                    
+                } catch (error) {
+                    console.log('iOS audio unlock exception:', error);
+                }
 
                 // Remove the event listeners after first unlock
                 document.removeEventListener('touchstart', unlockAudio);
@@ -914,6 +1320,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         document.addEventListener('touchstart', unlockAudio, { once: true });
         document.addEventListener('click', unlockAudio, { once: true });
+        
+        // Also try to unlock on any user gesture
+        document.addEventListener('touchend', unlockAudio, { once: true });
     }
 
 
