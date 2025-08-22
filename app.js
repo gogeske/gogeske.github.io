@@ -134,12 +134,12 @@ function addToHistory(location, locationIndex, phraseIndex) {
         locationIndex: locationIndex,
         phraseIndex: phraseIndex
     });
-    
+
     // Keep history reasonable size (last 20 items)
     if (locationHistory.length > 20) {
         locationHistory.shift();
     }
-    
+
     // Update history index to point to the end (current position is not in history)
     historyIndex = locationHistory.length - 1;
     console.log('Added to history:', location.location, 'historyIndex:', historyIndex, 'history length:', locationHistory.length);
@@ -147,37 +147,37 @@ function addToHistory(location, locationIndex, phraseIndex) {
 
 function goBackInHistory() {
     console.log('Going back - historyIndex:', historyIndex, 'history length:', locationHistory.length);
-    
+
     if (historyIndex < 0 || locationHistory.length === 0) {
         // No history to go back to, just get a random phrase
         console.log('No history, getting random phrase');
         getRandomPhrase();
         return;
     }
-    
+
     speechSynthesis.cancel();
     const historyItem = locationHistory[historyIndex];
     console.log('Going back to:', historyItem.location.location);
     historyIndex--; // Move back in history after getting the item
-    
+
     // Show loading state if image isn't preloaded
     const imageUrl = getResponsiveImageUrl(historyItem.location.image);
     if (!preloadedImages.has(historyItem.location.image) && !imageCache.has(imageUrl)) {
         showLoadingState();
     }
-    
+
     // Restore from history
     preloadImage(historyItem.location.image).then(() => {
         currentLocation = historyItem.location;
         currentLocationIndex = historyItem.locationIndex;
         currentPhraseIndex = historyItem.phraseIndex;
-        
+
         updateAll();
         hideLoadingState();
-        
+
         // Add haptic feedback
         triggerHapticFeedback();
-        
+
         // Announce to screen readers
         const phrase = currentLocation.phrases[currentPhraseIndex];
         if (!isWhimsicalLocation(currentLocation)) {
@@ -186,7 +186,7 @@ function goBackInHistory() {
         } else {
             announceToScreenReader(`Going back to: ${currentLocation.location}`);
         }
-        
+
         setTimeout(() => speakPhrase(), 200);
     }).catch(() => {
         hideLoadingState();
@@ -198,13 +198,68 @@ function goBackInHistory() {
     });
 }
 
-
+function goForwardInHistory() {
+    console.log('Going forward - historyIndex:', historyIndex, 'history length:', locationHistory.length);
+    
+    // Check if we can go forward in history
+    if (historyIndex + 2 < locationHistory.length) {
+        // There is forward history available
+        historyIndex++; // Move forward in history
+        speechSynthesis.cancel();
+        
+        const historyItem = locationHistory[historyIndex + 1];
+        console.log('Going forward to:', historyItem.location.location);
+        
+        // Show loading state if image isn't preloaded
+        const imageUrl = getResponsiveImageUrl(historyItem.location.image);
+        if (!preloadedImages.has(historyItem.location.image) && !imageCache.has(imageUrl)) {
+            showLoadingState();
+        }
+        
+        // Restore from history
+        preloadImage(historyItem.location.image).then(() => {
+            currentLocation = historyItem.location;
+            currentLocationIndex = historyItem.locationIndex;
+            currentPhraseIndex = historyItem.phraseIndex;
+            
+            updateAll();
+            hideLoadingState();
+            
+            // Add haptic feedback
+            triggerHapticFeedback();
+            
+            // Announce to screen readers
+            const phrase = currentLocation.phrases[currentPhraseIndex];
+            if (!isWhimsicalLocation(currentLocation)) {
+                const announcement = `Going forward: ${phrase.text}, meaning ${phrase.meaning || 'no translation'}, from ${currentLocation.location}`;
+                announceToScreenReader(announcement);
+            } else {
+                announceToScreenReader(`Going forward to: ${currentLocation.location}`);
+            }
+            
+            setTimeout(() => speakPhrase(), 200);
+        }).catch(() => {
+            hideLoadingState();
+            currentLocation = historyItem.location;
+            currentLocationIndex = historyItem.locationIndex;
+            currentPhraseIndex = historyItem.phraseIndex;
+            updateAll();
+            setTimeout(() => speakPhrase(), 200);
+        });
+    } else {
+        // No forward history, get a new random phrase
+        console.log('No forward history, getting new random phrase');
+        getRandomPhrase();
+    }
+}
 
 // Touch gesture variables
 let touchStartX = 0;
 let touchStartY = 0;
 let touchStartTime = 0;
 let isLongPress = false;
+let isSwipeInProgress = false;
+let swipeAnimationTimeout = null;
 
 // Accessibility functions
 function announceToScreenReader(message) {
@@ -277,7 +332,7 @@ function showLoadingState() {
     spinner.className = 'loading-spinner';
 
     const text = document.createElement('span');
-    text.textContent = 'Loading next location...';
+    text.textContent = 'Traveling...';
 
     content.appendChild(spinner);
     content.appendChild(text);
@@ -306,6 +361,14 @@ function handleTouchStart(e) {
     touchStartY = e.touches[0].clientY;
     touchStartTime = Date.now();
     isLongPress = false;
+    isSwipeInProgress = false;
+
+    // Clear any existing swipe animation
+    if (swipeAnimationTimeout) {
+        clearTimeout(swipeAnimationTimeout);
+        swipeAnimationTimeout = null;
+    }
+    document.body.className = document.body.className.replace(/swiping-\w+/g, '');
 
     // Set up long press detection
     setTimeout(() => {
@@ -314,6 +377,38 @@ function handleTouchStart(e) {
             triggerHapticFeedback([100, 50, 100]); // Long press feedback
         }
     }, 500);
+}
+
+function handleTouchMove(e) {
+    if (isLongPress || isSwipeInProgress) return;
+
+    const touchCurrentX = e.touches[0].clientX;
+    const touchCurrentY = e.touches[0].clientY;
+    const deltaX = touchCurrentX - touchStartX;
+    const deltaY = touchCurrentY - touchStartY;
+    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+
+    // Only start visual feedback if we've moved enough
+    if (distance > 20) {
+        isSwipeInProgress = true;
+
+        // Determine swipe direction and add visual feedback
+        if (Math.abs(deltaX) > Math.abs(deltaY)) {
+            // Horizontal swipe
+            if (deltaX > 0) {
+                document.body.classList.add('swiping-right');
+            } else {
+                document.body.classList.add('swiping-left');
+            }
+        } else {
+            // Vertical swipe
+            if (deltaY > 0) {
+                document.body.classList.add('swiping-down');
+            } else {
+                document.body.classList.add('swiping-up');
+            }
+        }
+    }
 }
 
 function handleTouchEnd(e) {
@@ -325,36 +420,67 @@ function handleTouchEnd(e) {
     const deltaY = touchEndY - touchStartY;
     const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
 
-    // Ignore if touch moved too much (likely scrolling)
-    if (distance > 100) return;
+    // Clear swipe visual feedback
+    const clearSwipeAnimation = () => {
+        document.body.className = document.body.className.replace(/swiping-\w+/g, '');
+        isSwipeInProgress = false;
+    };
 
     // Handle long press
     if (isLongPress) {
+        clearSwipeAnimation();
         speakPhrase(); // Repeat current phrase
         return;
     }
 
-    // Handle swipe gestures
-    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
+    // Handle swipe gestures with improved thresholds
+    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 30) {
         triggerHapticFeedback();
         if (deltaX > 0) {
-            // Swipe right - forward (new random phrase)
-            getRandomPhrase();
+            // Swipe right - forward in history or new random phrase
+            // Add a slight delay to show the animation
+            swipeAnimationTimeout = setTimeout(() => {
+                clearSwipeAnimation();
+                goForwardInHistory();
+            }, 150);
         } else {
             // Swipe left - back in history
-            goBackInHistory();
+            swipeAnimationTimeout = setTimeout(() => {
+                clearSwipeAnimation();
+                goBackInHistory();
+            }, 150);
         }
-    } else if (deltaY < -50) {
-        // Swipe up - open help
-        if (!terminalVisible) {
-            triggerHapticFeedback();
-            toggleTerminal();
+    } else if (Math.abs(deltaY) > 30) {
+        if (deltaY < 0) {
+            // Swipe up - open help
+            if (!terminalVisible) {
+                triggerHapticFeedback();
+                swipeAnimationTimeout = setTimeout(() => {
+                    clearSwipeAnimation();
+                    toggleTerminal();
+                }, 150);
+            } else {
+                clearSwipeAnimation();
+            }
+        } else {
+            // Swipe down - close help
+            if (terminalVisible) {
+                triggerHapticFeedback();
+                swipeAnimationTimeout = setTimeout(() => {
+                    clearSwipeAnimation();
+                    toggleTerminal();
+                }, 150);
+            } else {
+                clearSwipeAnimation();
+            }
         }
-    } else if (deltaY > 50) {
-        // Swipe down - close help
-        if (terminalVisible) {
-            triggerHapticFeedback();
-            toggleTerminal();
+    } else {
+        // No significant swipe, just clear animation
+        clearSwipeAnimation();
+
+        // Handle tap if it was a short touch with minimal movement
+        if (distance < 20 && touchDuration < 300) {
+            speakPhrase(); // Tap to repeat phrase
         }
     }
 }
@@ -366,8 +492,20 @@ function updateAll() {
     const isRTL = currentLocation.lang && currentLocation.lang.startsWith('ar');
     const isWhimsical = isWhimsicalLocation(currentLocation);
 
-    // Update background with responsive image
-    document.body.style.backgroundImage = `url('${getResponsiveImageUrl(currentLocation.image)}')`;
+    // Update background with responsive image and error handling
+    const imageUrl = getResponsiveImageUrl(currentLocation.image);
+    
+    // Test if image loads, fallback to gradient if it fails
+    const testImage = new Image();
+    testImage.onload = () => {
+        document.body.style.backgroundImage = `url('${imageUrl}')`;
+    };
+    testImage.onerror = () => {
+        console.log('Image failed to load:', imageUrl);
+        // Keep the CSS gradient fallback
+        document.body.style.backgroundImage = 'none';
+    };
+    testImage.src = imageUrl;
 
     // No center overlay to update anymore
 
@@ -391,8 +529,8 @@ function updateAll() {
 
         // Update details if visible
         if (detailsVisible) {
-            detailSentence1.textContent = `In ${currentLocation.location}, the language is ${currentLocation.lang_name}.`;
-            detailSentence2.textContent = `"${phrase.text}" means ${phrase.meaning || 'N/A'}.`;
+            detailSentence1.textContent = `This is ${currentLocation.lang_name} from ${currentLocation.location}.`;
+            detailSentence2.textContent = `"${phrase.text}" translates to "${phrase.meaning || 'no translation available'}".`;
             document.getElementById('details').setAttribute('aria-hidden', 'false');
         } else {
             document.getElementById('details').setAttribute('aria-hidden', 'true');
@@ -494,6 +632,14 @@ function speakPhrase() {
     const phrase = currentLocation.phrases[currentPhraseIndex];
     const isEmoji = /^[\u{1F000}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]+$/u.test(phrase.text);
 
+    // iOS audio unlock - create a dummy utterance first if needed
+    if (isMobileDevice() && 'speechSynthesis' in window && !window.speechSynthesisUnlocked) {
+        const dummyUtterance = new SpeechSynthesisUtterance('');
+        dummyUtterance.volume = 0;
+        speechSynthesis.speak(dummyUtterance);
+        window.speechSynthesisUnlocked = true;
+    }
+
     // Create flying text
     const flyingText = document.createElement('div');
     flyingText.className = 'flying-text';
@@ -561,9 +707,15 @@ function speakPhrase() {
     // Speak if not emoji and has language
     if (!isEmoji && currentLocation.lang && 'speechSynthesis' in window) {
         audioPlaying = true;
+
+        // Cancel any existing speech
+        speechSynthesis.cancel();
+
         const utterance = new SpeechSynthesisUtterance(phrase.text);
         utterance.lang = currentLocation.lang;
         utterance.rate = isMobileDevice() ? 0.9 : 1.0;
+        utterance.volume = 1.0;
+        utterance.pitch = 1.0;
 
         // Lazy initialize voices only when speech is first used
         if (cachedVoices.length === 0) updateVoicesCache();
@@ -577,9 +729,24 @@ function speakPhrase() {
             utterance.voice = langMatch;
         }
 
-        utterance.onend = () => audioPlaying = false;
-        utterance.onerror = () => audioPlaying = false;
-        speechSynthesis.speak(utterance);
+        utterance.onend = () => {
+            audioPlaying = false;
+        };
+
+        utterance.onerror = (event) => {
+            console.log('Speech synthesis error:', event.error);
+            audioPlaying = false;
+        };
+
+        // iOS requires speech to be triggered by user interaction
+        // Add a small delay to ensure proper iOS handling
+        if (isMobileDevice()) {
+            setTimeout(() => {
+                speechSynthesis.speak(utterance);
+            }, 100);
+        } else {
+            speechSynthesis.speak(utterance);
+        }
     }
 }
 
@@ -716,11 +883,45 @@ document.addEventListener('DOMContentLoaded', () => {
         terminalDialog.setAttribute('aria-hidden', 'true');
     }
 
+    // iOS viewport height fix
+    if (isMobileDevice()) {
+        const setViewportHeight = () => {
+            const vh = window.innerHeight * 0.01;
+            document.documentElement.style.setProperty('--vh', `${vh}px`);
+        };
+
+        setViewportHeight();
+        window.addEventListener('resize', setViewportHeight);
+        window.addEventListener('orientationchange', () => {
+            setTimeout(setViewportHeight, 100);
+        });
+    }
+
+    // iOS audio initialization - unlock audio on first user interaction
+    if (isMobileDevice() && 'speechSynthesis' in window) {
+        const unlockAudio = () => {
+            if (!window.speechSynthesisUnlocked) {
+                const dummyUtterance = new SpeechSynthesisUtterance('');
+                dummyUtterance.volume = 0;
+                speechSynthesis.speak(dummyUtterance);
+                window.speechSynthesisUnlocked = true;
+
+                // Remove the event listeners after first unlock
+                document.removeEventListener('touchstart', unlockAudio);
+                document.removeEventListener('click', unlockAudio);
+            }
+        };
+
+        document.addEventListener('touchstart', unlockAudio, { once: true });
+        document.addEventListener('click', unlockAudio, { once: true });
+    }
+
 
 
     // Add touch event listeners for mobile gestures
     if (isMobileDevice()) {
         document.addEventListener('touchstart', handleTouchStart, { passive: true });
+        document.addEventListener('touchmove', handleTouchMove, { passive: true });
         document.addEventListener('touchend', handleTouchEnd, { passive: true });
 
         // Add mobile-specific instructions to terminal
@@ -731,9 +932,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Create mobile instruction lines
             const instructions = [
-                { prompt: 'Mobile:', text: 'Swipe right for new, left to go back' },
-                { prompt: 'Gestures:', text: 'Swipe up for help, down to close' },
-                { prompt: 'Long press:', text: 'Repeat current phrase' }
+                { prompt: 'Swipe:', text: 'Right for next, left to go back' },
+                { prompt: 'Help:', text: 'Swipe up to open, down to close' },
+                { prompt: 'Repeat:', text: 'Long press anywhere' }
             ];
 
             instructions.forEach(instruction => {

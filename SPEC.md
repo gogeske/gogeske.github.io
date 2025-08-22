@@ -84,6 +84,20 @@
 - **Mobile accessibility**: Touch gestures with haptic feedback
 - **High contrast**: Respects user preferences
 
+### iOS Mobile Fixes (Latest)
+- **Scroll prevention**: Fixed unwanted vertical scrolling on iOS Safari
+- **Swipe feedback**: Added subtle visual feedback during swipe gestures
+- **History navigation**: Right swipe now properly handles forward/back history
+- **Audio unlock**: iOS speech synthesis properly initialized on first interaction
+- **Viewport handling**: Dynamic viewport height for iOS Safari address bar
+
+### Content & Tone Guidelines
+- **Conversational tone**: "This is French from Paris" vs "In Paris, the language is French"
+- **Inclusive language**: Acknowledges linguistic diversity without assumptions
+- **Minimal animations**: Subtle 8px movement vs heavy effects (2024 design trends)
+- **Error handling**: Graceful fallbacks with subtle gradient backgrounds
+- **User-friendly text**: "no translation available" vs "N/A"
+
 ## What's Next (If Needed)
 
 ### Content
@@ -116,3 +130,6 @@
 3. **Mobile first** - Touch and accessibility matter
 4. **Performance matters** - Fast loading, smooth transitions
 5. **One file per concern** - Clear separation of HTML/CSS/JS
+6. **Organic interactions** - Subtle feedback aligned with 2024 design trends
+7. **Inclusive content** - Conversational, welcoming tone for all users
+8. **Graceful degradation** - Fallbacks for failed images, audio, etc.
