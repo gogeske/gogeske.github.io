@@ -1,0 +1,698 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Diplo Plates</title>
+<meta name="description" content="Berlin diplomatic plate codes: type the number, get the country. Works offline.">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Diplo Plates">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="format-detection" content="telephone=no">
+<meta name="theme-color" content="#eceef2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0b0d12" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<style>
+/* Diplo Plates. One file, system fonts, no network needed after first load.
+   Phone: one screen per tab, keypad under the thumb.
+   Desktop: lookup card on the left, codes / log / stats on the right, keyboard drives the plate. */
+:root{
+  color-scheme:light dark;
+  --bg:#eceef2; --surface:#ffffff; --ink:#12151c; --muted:#657086; --line:#d8dce5;
+  --key:#ffffff; --key-down:#dfe3ec; --accent:#003399; --on-accent:#ffffff; --accent-soft:#e3eafb;
+  --good:#17794b; --bad:#b3261e; --shadow:0 1px 2px rgba(16,24,40,.08),0 1px 1px rgba(16,24,40,.04);
+  --ui:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --num:ui-rounded,"SF Pro Rounded",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --plate:"DIN Alternate","DIN Condensed","Bahnschrift","Roboto Condensed","Arial Narrow","Helvetica Neue",Arial,sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0b0d12; --surface:#151921; --ink:#eef1f6; --muted:#97a1b4; --line:#272d39;
+    --key:#1b202a; --key-down:#2c3442; --accent:#86abff; --on-accent:#0b0d12; --accent-soft:#1a2540;
+    --good:#55d69a; --bad:#ff8b80; --shadow:0 1px 2px rgba(0,0,0,.5);
+  }
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+html,body{margin:0;height:100%}
+body{
+  background:var(--bg);color:var(--ink);font:16px/1.4 var(--ui);
+  -webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%;
+  overscroll-behavior:none;overflow:hidden;
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
+}
+button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:pointer;touch-action:manipulation}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+input,textarea{font:inherit;color:inherit;-webkit-user-select:text;user-select:text}
+
+#app{
+  height:100vh;height:100dvh;display:flex;flex-direction:column;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px);
+}
+.brand{display:none}
+
+/* ---------- lookup ---------- */
+#lookup{flex:1;min-height:0;display:flex;flex-direction:column;padding:12px 16px 10px;overflow-y:auto}
+.plate{
+  flex:0 0 auto;height:clamp(70px,12vh,96px);display:flex;align-items:stretch;overflow:hidden;
+  background:#fff;color:#0d0f13;border:3px solid #0d0f13;border-radius:12px;
+  box-shadow:0 0 0 1px rgba(255,255,255,.14),0 6px 18px rgba(0,0,0,.18);
+}
+.eu{flex:0 0 clamp(32px,9%,44px);background:#003399;color:#fff;display:flex;flex-direction:column;
+  align-items:center;justify-content:space-evenly;font:700 14px/1 var(--ui);padding:6px 0}
+.eu svg{width:60%;height:auto}
+.chars{flex:1;display:flex;align-items:center;justify-content:center;gap:.22em;
+  font:700 clamp(40px,7.6vh,58px)/1 var(--plate);letter-spacing:.02em;font-variant-numeric:tabular-nums}
+.slot{position:relative;min-width:.62em;text-align:center;padding:0 .04em}
+.slot.ph{color:#c2c6cf}
+.slot.sel::after{content:"";position:absolute;left:8%;right:8%;bottom:-.14em;height:.08em;border-radius:2px;
+  background:#003399;animation:blink 1.1s steps(1) infinite}
+@keyframes blink{50%{opacity:.25}}
+.zero.nudge{animation:nudge .25s}
+@keyframes nudge{50%{transform:scale(1.18);color:#003399}}
+.dash{opacity:.55;font-weight:400}
+
+#res{flex:0 0 auto;min-height:96px;display:flex;align-items:center;gap:14px;padding:14px 4px 6px}
+#flag{flex:0 0 64px;font-size:54px;line-height:1;text-align:center}
+#res .txt{min-width:0;flex:1}
+#name{font-size:clamp(24px,7vw,31px);font-weight:700;line-height:1.1;letter-spacing:-.02em;overflow-wrap:anywhere}
+#sub{font-size:14px;color:var(--muted);margin-top:4px}
+#res.idle #flag,#res.miss #flag{display:none}
+#res.idle #name,#res.miss #name{font-size:18px;font-weight:500;color:var(--muted);letter-spacing:0}
+#res.pop #flag{animation:pop .22s cubic-bezier(.2,1.4,.4,1)}
+@keyframes pop{0%{transform:scale(.6);opacity:0}}
+.shake{animation:shake .28s}
+@keyframes shake{25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+#alt{align-self:flex-start;margin:0 4px 6px;padding:8px 12px;border-radius:999px;background:var(--accent-soft);
+  color:var(--accent);font-size:14px;font-weight:600;min-height:36px}
+#nameit{display:flex;gap:8px;padding:2px 0 8px}
+#nameit input{flex:1;min-width:0;height:44px;padding:0 12px;border-radius:12px;border:1px solid var(--line);background:var(--surface)}
+#nameit button{height:44px;padding:0 16px;border-radius:12px;background:var(--accent);color:var(--on-accent);font-weight:600}
+
+.pad{margin-top:auto;display:grid;grid-template-columns:repeat(3,1fr);gap:9px;padding-top:6px}
+.k{
+  height:clamp(48px,8.4vh,68px);border-radius:16px;background:var(--key);box-shadow:var(--shadow);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  font:500 28px/1 var(--num);
+}
+.k small{font:600 10px/1 var(--ui);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-top:3px}
+.k svg{width:28px;height:28px}
+.k.fn{background:transparent;box-shadow:none}
+.k:active,.k.hit{background:var(--key-down);transform:scale(.97)}
+#log{grid-column:1/-1;height:56px;background:var(--accent);color:var(--on-accent);font:600 18px/1 var(--ui);box-shadow:none;
+  transition:background .15s,opacity .15s}
+#log:disabled{opacity:.3}
+#log.done{background:var(--good)}
+.kbd{display:none}
+
+/* ---------- side panes ---------- */
+#side{flex:1;min-height:0;display:flex;flex-direction:column}
+.pane{display:none;flex:1;min-height:0;flex-direction:column}
+.head{padding:12px 16px 8px;display:flex;flex-direction:column;gap:8px}
+.head h1{margin:0;font-size:28px;font-weight:700;letter-spacing:-.02em}
+.search{height:44px;width:100%;padding:0 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface)}
+.seg{display:flex;background:var(--line);border-radius:10px;padding:2px}
+.seg button{flex:1;height:32px;border-radius:8px;font-size:13px;font-weight:600;color:var(--muted)}
+.seg button.on{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+.scroll{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:0 16px 20px}
+.row{width:100%;display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);text-align:left}
+.row .f{flex:0 0 36px;font-size:28px;line-height:1;text-align:center}
+.row .m{flex:1;min-width:0}
+.row .t{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .s{font-size:13px;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .n{font:600 14px/1 var(--num);font-variant-numeric:tabular-nums;color:var(--muted);white-space:nowrap}
+.row .badge{font:700 12px/1 var(--num);background:var(--accent-soft);color:var(--accent);padding:4px 7px;border-radius:999px}
+.row .x{flex:0 0 40px;height:40px;border-radius:10px;color:var(--muted);font-size:22px;line-height:1}
+button.row:active{background:var(--key-down)}
+.day{position:sticky;top:0;background:var(--bg);font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--muted);padding:14px 0 6px;z-index:1}
+h3{font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:24px 0 8px;font-weight:700}
+.cards{display:flex;gap:8px}
+.c{flex:1;background:var(--surface);border-radius:14px;padding:12px;box-shadow:var(--shadow)}
+.c b{display:block;font:700 28px/1.1 var(--num);font-variant-numeric:tabular-nums}
+.c span{font-size:12px;color:var(--muted)}
+.prog{height:8px;border-radius:99px;background:var(--line);margin-top:12px;overflow:hidden}
+.prog i{display:block;height:100%;background:var(--accent);border-radius:99px}
+.bars{display:flex;align-items:flex-end;gap:4px;height:72px}
+.bars i{flex:1;background:var(--accent);border-radius:3px 3px 0 0;min-height:2px}
+.blab{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:4px}
+.once{font-size:26px;line-height:1.5;letter-spacing:2px}
+.empty{color:var(--muted);font-size:15px;padding:48px 12px;text-align:center;line-height:1.6}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+.btn{height:44px;padding:0 16px;border-radius:12px;background:var(--surface);box-shadow:var(--shadow);font-weight:600;font-size:15px}
+.btn.pri{background:var(--accent);color:var(--on-accent)}
+.btn:active{transform:scale(.97)}
+.set{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;font-size:15px}
+.sw{flex:0 0 52px;height:32px;border-radius:99px;background:var(--line);position:relative;transition:background .15s}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:26px;height:26px;border-radius:50%;background:#fff;
+  box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .15s}
+.sw[aria-checked="true"]{background:var(--good)}
+.sw[aria-checked="true"]::after{transform:translateX(20px)}
+.note{font-size:13px;color:var(--muted);line-height:1.5;margin:8px 0 0;-webkit-user-select:text;user-select:text}
+.note a{color:var(--accent)}
+
+/* ---------- tab bar ---------- */
+#tabs{flex:0 0 auto;display:flex;border-top:1px solid var(--line);background:var(--bg);
+  padding:6px 8px calc(4px + env(safe-area-inset-bottom,0px))}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 0;min-height:48px;
+  font-size:11px;font-weight:600;color:var(--muted);border-radius:12px}
+.tab svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tab.on{color:var(--accent)}
+
+#app[data-tab="plate"] #side{display:none}
+#app:not([data-tab="plate"]) #lookup{display:none}
+#app[data-side="find"] #p-find,#app[data-side="log"] #p-log,#app[data-side="stats"] #p-stats{display:flex}
+
+/* ---------- toast + sheet ---------- */
+#toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translate(-50%,12px);
+  display:flex;align-items:center;gap:14px;max-width:min(92vw,420px);
+  background:var(--ink);color:var(--bg);padding:11px 16px;border-radius:14px;font-size:15px;font-weight:500;
+  opacity:0;pointer-events:none;transition:opacity .18s,transform .18s;z-index:20;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+#toast.on{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+#toast button{font-weight:700;color:inherit;text-decoration:underline;text-underline-offset:3px;min-height:28px}
+#sheet{position:fixed;inset:0;z-index:30;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center}
+#sheet .box{width:min(100%,520px);background:var(--bg);border-radius:20px 20px 0 0;
+  padding:20px 16px calc(20px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:12px}
+#sheet h2{margin:0;font-size:20px}
+#sheet textarea{height:120px;border-radius:12px;border:1px solid var(--line);background:var(--surface);padding:10px;font-size:14px;resize:none}
+
+/* ---------- desktop ---------- */
+@media (min-width:900px){
+  body{overflow:auto}
+  #app{display:grid;grid-template-columns:392px minmax(0,1fr);grid-template-rows:auto auto minmax(0,1fr);
+    column-gap:28px;max-width:1080px;margin:0 auto;padding:28px 32px 32px;height:100vh;min-height:640px}
+  .brand{display:block;grid-column:1/-1;margin:0 0 18px}
+  .brand b{font-size:22px;letter-spacing:-.02em}
+  .brand span{color:var(--muted);margin-left:10px;font-size:15px}
+  #lookup,#app:not([data-tab="plate"]) #lookup{display:flex;grid-column:1;grid-row:2/4;align-self:start;
+    background:var(--surface);border-radius:24px;padding:24px;box-shadow:var(--shadow);overflow:visible;flex:none}
+  #res{min-height:112px}
+  .pad{margin-top:8px}
+  .k{height:60px;background:var(--bg);box-shadow:none}
+  .k:hover{background:var(--key-down)}
+  .k.fn{background:transparent}
+  .kbd{display:block;text-align:center;font-size:12px;color:var(--muted);margin-top:14px}
+  .kbd kbd{font:600 11px var(--ui);border:1px solid var(--line);border-radius:5px;padding:1px 5px;margin:0 1px}
+  #tabs{grid-column:2;grid-row:2;border:0;background:var(--line);border-radius:12px;padding:3px;align-self:start;justify-self:start;gap:2px}
+  .tab{flex:none;flex-direction:row;gap:8px;min-height:36px;padding:0 16px;font-size:14px;border-radius:9px}
+  .tab svg{width:18px;height:18px}
+  .tab.on{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+  .tab[data-p="plate"]{display:none}
+  #side,#app[data-tab="plate"] #side{display:flex;grid-column:2;grid-row:3;margin-top:14px;background:var(--surface);
+    border-radius:24px;box-shadow:var(--shadow);overflow:hidden}
+  .head{padding:20px 24px 10px}
+  .head h1{display:none}
+  .scroll{padding:0 24px 24px}
+  .search,.c{background:var(--bg);box-shadow:none}
+  .day{background:var(--surface)}
+  .btn{background:var(--bg);box-shadow:none}
+  button.row:hover{background:var(--bg)}
+  #toast{bottom:32px}
+  #sheet{align-items:center}
+  #sheet .box{border-radius:20px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div id="app" data-tab="plate" data-side="find">
+  <div class="brand"><b>Diplo Plates</b><span>Berlin diplomatic plate codes</span></div>
+
+  <section id="lookup" aria-label="Plate lookup">
+    <div class="plate" aria-hidden="true">
+      <div class="eu">
+        <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="none" stroke="#fc0" stroke-width="2" stroke-linecap="round" stroke-dasharray="0.01 3.1316"/></svg>
+        <span>D</span>
+      </div>
+      <div class="chars">
+        <span class="slot zero" id="s-zero">0</span>
+        <span class="slot" id="s-code"></span>
+        <span class="dash">-</span>
+        <span class="slot" id="s-rank"></span>
+      </div>
+    </div>
+
+    <div id="res" class="idle" aria-live="polite">
+      <div id="flag"></div>
+      <div class="txt"><div id="name"></div><div id="sub"></div></div>
+    </div>
+    <button id="alt" hidden></button>
+    <div id="nameit" hidden>
+      <input type="text" id="pname" placeholder="Name this spot" autocomplete="off" maxlength="40" enterkeyhint="done">
+      <button id="psave">Save</button>
+    </div>
+
+    <div class="pad" id="pad">
+      <button class="k" data-d="1">1</button><button class="k" data-d="2">2</button><button class="k" data-d="3">3</button>
+      <button class="k" data-d="4">4</button><button class="k" data-d="5">5</button><button class="k" data-d="6">6</button>
+      <button class="k" data-d="7">7</button><button class="k" data-d="8">8</button><button class="k" data-d="9">9</button>
+      <button class="k fn" data-a="dash" aria-label="Switch between country code and serial number">&ndash;<small>serial</small></button>
+      <button class="k" data-d="0">0</button>
+      <button class="k fn" data-a="del" aria-label="Delete. Hold to clear">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5h10a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-6-7z"/><path d="M12 9.5l5 5M17 9.5l-5 5"/></svg>
+      </button>
+      <button class="k" id="log" disabled>Log sighting</button>
+    </div>
+    <div class="kbd">Type digits &middot; <kbd>-</kbd> serial &middot; <kbd>Enter</kbd> log &middot; <kbd>Esc</kbd> clear</div>
+  </section>
+
+  <div id="side">
+    <section class="pane" id="p-find" aria-label="All codes">
+      <div class="head">
+        <h1>Codes</h1>
+        <input class="search" type="search" id="q" placeholder="Country, Land or code" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="search">
+        <div class="seg" id="filt">
+          <button data-f="all" class="on">All</button><button data-f="seen">Seen</button><button data-f="unseen">Not yet</button>
+        </div>
+      </div>
+      <div class="scroll" id="qlist"></div>
+    </section>
+    <section class="pane" id="p-log" aria-label="Sightings log">
+      <div class="head"><h1>Log</h1></div>
+      <div class="scroll" id="loglist"></div>
+    </section>
+    <section class="pane" id="p-stats" aria-label="Stats and backup">
+      <div class="head"><h1>Stats</h1></div>
+      <div class="scroll" id="stats"></div>
+    </section>
+  </div>
+
+  <nav id="tabs">
+    <button class="tab" data-p="plate"><svg viewBox="0 0 24 24"><rect x="2.5" y="7" width="19" height="10" rx="2.5"/><path d="M7 7v10M11 12h2M16 12h2"/></svg>Lookup</button>
+    <button class="tab" data-p="find"><svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01"/></svg>Codes</button>
+    <button class="tab" data-p="log"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>Log</button>
+    <button class="tab" data-p="stats"><svg viewBox="0 0 24 24"><path d="M5 20v-8M12 20V4M19 20v-5"/></svg>Stats</button>
+  </nav>
+</div>
+
+<div id="toast" role="status"><span id="toast-t"></span><button id="toast-b" hidden></button></div>
+<div id="sheet" hidden>
+  <div class="box" role="dialog" aria-label="Import sightings">
+    <h2>Import sightings</h2>
+    <p class="note" style="margin:0">Paste an exported log (or the text copied from the old Claude version), or pick a backup file. Entries you already have are skipped.</p>
+    <textarea id="imp-t" placeholder="Paste here" autocomplete="off" autocapitalize="off" spellcheck="false"></textarea>
+    <div class="btns">
+      <button class="btn pri" id="imp-go">Import pasted text</button>
+      <button class="btn" id="imp-file">Choose file</button>
+      <button class="btn" id="imp-x">Cancel</button>
+    </div>
+    <input type="file" id="imp-f" accept=".json,application/json,text/plain" hidden>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+var VERSION="1.0";
+/* Berlin diplomatic plate codes: code -> [English, ISO 3166-1 alpha-2 or org tag, German as listed at the source].
+   Source: embassy-berlin.net/codes/cd, re-checked 14 Nov 2026 (169 entries, no changes since 17 Sep 2026). */
+var CODES={"10":["Vatican City","VA","Vatikanstaat"],"11":["Egypt","EG","Ägypten"],"12":["Angola","AO","Angola"],"13":["Albania","AL","Albanien"],"14":["Ethiopia","ET","Äthiopien"],"15":["Afghanistan","AF","Afghanistan"],"16":["Algeria","DZ","Algerien"],"17":["United States","US","USA"],"18":["Argentina","AR","Argentinien"],"19":["Australia","AU","Australien"],"20":["Bangladesh","BD","Bangladesch"],"21":["Belgium","BE","Belgien"],"22":["Brunei","BN","Brunei"],"23":["Bulgaria","BG","Bulgarien"],"24":["Myanmar","MM","Myanmar"],"25":["Bolivia","BO","Bolivien"],"26":["Brazil","BR","Brasilien"],"27":["Burundi","BI","Burundi"],"28":["Chile","CL","Chile"],"29":["China","CN","China"],"30":["Costa Rica","CR","Costa Rica"],"31":["Belarus","BY","Weißrussland"],"32":["Bosnia and Herzegovina","BA","Bosnien und Herzegowina"],"33":["Equatorial Guinea","GQ","Äquatorialguinea"],"34":["Denmark","DK","Dänemark"],"35":["Benin","BJ","Benin"],"36":["Dominican Republic","DO","Dominikanische Republik"],"37":["Ecuador","EC","Ecuador"],"38":["Côte d'Ivoire","CI","Elfenbeinküste"],"39":["El Salvador","SV","El Salvador"],"40":["Kosovo","XK","Kosovo"],"41":["Estonia","EE","Estland"],"42":["Liechtenstein","LI","Liechtenstein"],"43":["Montenegro","ME","Montenegro"],"44":["Finland","FI","Finnland"],"45":["France","FR","Frankreich"],"46":["Gabon","GA","Gabun"],"47":["Ghana","GH","Ghana"],"48":["Greece","GR","Griechenland"],"49":["United Kingdom","GB","Großbritannien"],"50":["Guatemala","GT","Guatemala"],"51":["Guinea","GN","Guinea"],"52":["Latvia","LV","Lettland"],"53":["Lithuania","LT","Litauen"],"54":["Haiti","HT","Haiti"],"55":["Honduras","HN","Honduras"],"56":["India","IN","Indien"],"57":["Indonesia","ID","Indonesien"],"58":["Iraq","IQ","Irak"],"59":["Iran","IR","Iran"],"60":["Ireland","IE","Irland"],"61":["Iceland","IS","Island"],"62":["Laos","LA","Laos"],"63":["Cape Verde","CV","Kap Verde"],"64":["Israel","IL","Israel"],"65":["Italy","IT","Italien"],"66":["Jamaica","JM","Jamaika"],"67":["Japan","JP","Japan"],"68":["Yemen","YE","Jemen"],"69":["Jordan","JO","Jordanien"],"70":["Serbia","RS","Serbien"],"71":["Kuwait","KW","Kuwait"],"72":["Cuba","CU","Kuba"],"73":["Qatar","QA","Katar"],"74":["Cameroon","CM","Kamerun"],"75":["Canada","CA","Kanada"],"76":["Kenya","KE","Kenia"],"77":["Colombia","CO","Kolumbien"],"78":["Congo-Brazzaville","CG","Kongo-Brazzaville"],"79":["South Korea","KR","Südkorea"],"80":["Lebanon","LB","Libanon"],"81":["Liberia","LR","Liberia"],"82":["Libya","LY","Libyen"],"83":["Lesotho","LS","Lesotho"],"84":["Luxembourg","LU","Luxemburg"],"85":["Madagascar","MG","Madagaskar"],"86":["Malawi","MW","Malawi"],"87":["Malaysia","MY","Malaysia"],"88":["Mali","ML","Mali"],"89":["Morocco","MA","Marokko"],"90":["Mauritania","MR","Mauretanien"],"91":["Mexico","MX","Mexiko"],"92":["Malta","MT","Malta"],"93":["Monaco","MC","Monaco"],"94":["Nepal","NP","Nepal"],"95":["New Zealand","NZ","Neuseeland"],"96":["Nicaragua","NI","Nicaragua"],"97":["Netherlands","NL","Niederlande"],"98":["Niger","NE","Niger"],"99":["Nigeria","NG","Nigeria"],"100":["Norway","NO","Norwegen"],"101":["Mongolia","MN","Mongolei"],"102":["Mozambique","MZ","Mosambik"],"103":["Oman","OM","Oman"],"104":["Burkina Faso","BF","Burkina Faso"],"105":["Austria","AT","Österreich"],"106":["Pakistan","PK","Pakistan"],"107":["Panama","PA","Panama"],"108":["Paraguay","PY","Paraguay"],"109":["Peru","PE","Peru"],"110":["Philippines","PH","Philippinen"],"111":["Poland","PL","Polen"],"112":["Portugal","PT","Portugal"],"114":["Namibia","NA","Namibia"],"115":["Rwanda","RW","Ruanda"],"116":["Romania","RO","Rumänien"],"117":["Zambia","ZM","Sambia"],"118":["Saudi Arabia","SA","Saudi-Arabien"],"119":["Sweden","SE","Schweden"],"120":["Switzerland","CH","Schweiz"],"121":["Senegal","SN","Senegal"],"122":["Sierra Leone","SL","Sierra Leone"],"123":["Singapore","SG","Singapur"],"124":["Zimbabwe","ZW","Simbabwe"],"125":["Somalia","SO","Somalia"],"126":["Spain","ES","Spanien"],"127":["Sri Lanka","LK","Sri Lanka"],"128":["Sudan","SD","Sudan"],"129":["South Africa","ZA","Südafrika"],"130":["Syria","SY","Syrien"],"131":["Tanzania","TZ","Tansania"],"132":["Thailand","TH","Thailand"],"133":["Togo","TG","Togo"],"135":["Czechia","CZ","Tschechien"],"136":["Chad","TD","Tschad"],"137":["Türkiye","TR","Türkei"],"138":["Tunisia","TN","Tunesien"],"139":["Uganda","UG","Uganda"],"140":["Russia","RU","Russland"],"141":["Uruguay","UY","Uruguay"],"142":["Hungary","HU","Ungarn"],"143":["Ukraine","UA","Ukraine"],"144":["Grenada","GD","Grenada"],"146":["Venezuela","VE","Venezuela"],"147":["Vietnam","VN","Vietnam"],"148":["United Arab Emirates","AE","Vereinigte Arabische Emirate"],"151":["DR Congo","CD","Kongo"],"152":["Central African Republic","CF","Zentralafrikanische Republik"],"153":["Cyprus","CY","Zypern"],"154":["Croatia","HR","Kroatien"],"155":["Slovenia","SI","Slowenien"],"156":["Azerbaijan","AZ","Aserbaidschan"],"157":["Slovakia","SK","Slowakei"],"158":["Kazakhstan","KZ","Kasachstan"],"159":["North Macedonia","MK","Nordmazedonien"],"160":["Uzbekistan","UZ","Usbekistan"],"161":["Eritrea","ER","Eritrea"],"162":["Georgia","GE","Georgien"],"163":["Tajikistan","TJ","Tadschikistan"],"164":["Bahrain","BH","Bahrain"],"165":["Cambodia","KH","Kambodscha"],"166":["Armenia","AM","Armenien"],"167":["Kyrgyzstan","KG","Kirgisistan"],"168":["Moldova","MD","Moldawien"],"169":["Turkmenistan","TM","Turkmenistan"],"170":["ILO","UN","ILO"],"173":["UNHCR","UN","UNHCR"],"176":["Arab League","LAS","Arabische Liga"],"182":["European Union","EU","Europäische Union"],"184":["OECD","OECD","OECD"],"185":["World Food Programme","UN","WFP"],"190":["World Bank","UN","Weltbank"],"200":["Mauritius","MU","Mauritius"],"201":["North Korea","KP","Nordkorea"],"202":["Djibouti","DJ","Dschibuti"],"203":["Guinea-Bissau","GW","Guinea-Bissau"],"204":["South Sudan","SS","Südsudan"],"205":["Botswana","BW","Botswana"],"206":["Maldives","MV","Malediven"]};
+var SRC_DATE="14 Nov 2026";
+var KEYS=Object.keys(CODES).map(Number);
+var TOTAL=KEYS.length;
+var ORG={UN:"🇺🇳",EU:"🇪🇺"};
+
+function flagOf(iso){
+  if(ORG[iso]) return ORG[iso];
+  if(!iso||iso.length!==2) return "🏛️";
+  return String.fromCodePoint(0x1F1E6+iso.charCodeAt(0)-65,0x1F1E6+iso.charCodeAt(1)-65);
+}
+function isOrg(n){ return n>=170&&n<=199; }
+function $(id){ return document.getElementById(id); }
+function esc(s){ return String(s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];}); }
+function norm(s){ return String(s).toLowerCase().replace(/ß/g,"ss").normalize("NFD").replace(/[̀-ͯ]/g,""); }
+function plateText(c,r){ return "0 "+c+(r?"-"+r:""); }
+
+/* ---------- storage: everything lives on this device ---------- */
+var K_S="diplo.sightings.v1",K_P="diplo.places.v1",K_M="diplo.meta.v1";
+function lsRead(k,d){ try{ var v=localStorage.getItem(k); return v?JSON.parse(v):d; }catch(e){ return d; } }
+function lsWrite(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); return true; }catch(e){ return false; } }
+var sights=lsRead(K_S,[]), places=lsRead(K_P,[]), meta=lsRead(K_M,{});
+if(!Array.isArray(sights)) sights=[];
+if(!Array.isArray(places)) places=[];
+if(!meta||typeof meta!=="object") meta={};
+var seenBy={};
+function recount(){ seenBy={}; sights.forEach(function(s){ seenBy[s.c]=(seenBy[s.c]||0)+1; }); }
+function save(){
+  if(!lsWrite(K_S,sights)) toast("Could not save. Storage is full or blocked.");
+  recount();
+}
+function savePlaces(){ lsWrite(K_P,places); }
+function saveMeta(){ lsWrite(K_M,meta); }
+recount();
+
+/* ---------- places ---------- */
+function dist(a,b,c,d){ var R=6371000,x=(c-a)*Math.PI/180,y=(d-b)*Math.PI/180*Math.cos((a+c)/2*Math.PI/180); return R*Math.sqrt(x*x+y*y); }
+function nearestPlace(lat,lon){ var best=null,bd=250; places.forEach(function(p){ var m=dist(lat,lon,p.lat,p.lon); if(m<bd){bd=m;best=p;} }); return best; }
+function placeName(id){ for(var i=0;i<places.length;i++) if(places[i].id===id) return places[i].name; return null; }
+
+/* ---------- lookup ---------- */
+var code="",rank="",field="code",justLogged=false,lastId=null;
+var sZero=$("s-zero"),sCode=$("s-code"),sRank=$("s-rank"),elRes=$("res"),elFlag=$("flag"),elName=$("name"),elSub=$("sub"),
+    btn=$("log"),elAlt=$("alt"),elNameit=$("nameit"),lastShown=null;
+
+function fx(el,cls,ms){ el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); setTimeout(function(){ el.classList.remove(cls); },ms); }
+function clearPlate(){ code="";rank="";field="code";justLogged=false;elNameit.hidden=true; }
+
+function paint(){
+  sCode.textContent=code||"––"; sCode.classList.toggle("ph",!code); sCode.classList.toggle("sel",field==="code");
+  sRank.textContent=rank||"–";       sRank.classList.toggle("ph",!rank); sRank.classList.toggle("sel",field==="rank");
+  var n=code?parseInt(code,10):NaN,hit=CODES[n];
+  elAlt.hidden=true;
+  if(hit){
+    elRes.className=(lastShown!==n?"pop":"");
+    elFlag.textContent=flagOf(hit[1]); elName.textContent=hit[0];
+    var bits=[];
+    if(hit[2]&&hit[2]!==hit[0]) bits.push(hit[2]);
+    if(isOrg(n)) bits.push("International organisation");
+    var seen=seenBy[n]||0;
+    if(rank){
+      var r=parseInt(rank,10),car=sights.filter(function(s){return s.c===n&&s.r===r;}).length;
+      bits.push(car?"this car seen "+car+"×":(seen?"new car, country seen "+seen+"×":"not logged yet"));
+    } else bits.push(seen?"seen "+seen+"×":"not logged yet");
+    elSub.textContent=bits.join(" · ");
+    if(!justLogged){ btn.disabled=false; btn.classList.remove("done"); btn.textContent="Log sighting"; }
+    // "104" could also be 0 10-4: offer the other reading
+    var two=CODES[parseInt(code.slice(0,2),10)];
+    if(code.length===3&&!rank&&two&&code[2]!=="0"&&!justLogged){
+      elAlt.hidden=false;
+      elAlt.textContent="Or 0 "+code.slice(0,2)+"-"+code[2]+": "+flagOf(two[1])+" "+two[0];
+    }
+  } else {
+    btn.disabled=true; btn.classList.remove("done"); btn.textContent="Log sighting";
+    if(!code){ elRes.className="idle"; elName.textContent="Type the number after the 0"; elSub.textContent=""; }
+    else if(code.length<2){ elRes.className="idle"; elName.textContent="…"; elSub.textContent=""; }
+    else { elRes.className="miss"; elName.textContent="No mission on record for "+code; elSub.textContent="Codes run 10 to 206, with gaps"; }
+  }
+  lastShown=hit?n:null;
+}
+
+function digit(d){
+  if(justLogged) clearPlate();
+  if(field==="code"){
+    if(!code&&d==="0"){ fx(sZero,"nudge",260); return; }       // the plate's own leading 0
+    var cand=code+d;
+    if(code.length<2) code=cand;
+    else if(code.length===2){
+      if(CODES[parseInt(cand,10)]) code=cand;                   // 104 Burkina Faso
+      else if(CODES[parseInt(code,10)]){ field="rank"; rank=d; } // 45 then 3 -> 0 45-3
+      else code=cand;
+    } else if(CODES[parseInt(code,10)]){ field="rank"; rank=d; }
+    else { fx(elRes,"shake",300); return; }
+  } else {
+    if(rank.length>=4||(!rank&&d==="0")){ fx(elRes,"shake",300); return; }
+    rank+=d;
+  }
+  elNameit.hidden=true; paint();
+}
+function del(){
+  if(justLogged){ clearPlate(); paint(); return; }
+  if(field==="rank"&&rank) rank=rank.slice(0,-1);
+  else if(field==="rank") field="code";
+  else code=code.slice(0,-1);
+  paint();
+}
+function dash(){
+  if(justLogged) return;
+  if(field==="code"){ if(CODES[parseInt(code,10)]) field="rank"; else if(code) fx(elRes,"shake",300); }
+  else field="code";
+  paint();
+}
+function clearAll(){ clearPlate(); paint(); }
+
+// keypad: act on pointerdown so the answer is there before the finger lifts
+var holdT=null,swallow=0;
+function press(el){
+  if(el.dataset.d!=null) digit(el.dataset.d);
+  else if(el.dataset.a==="del") del();
+  else if(el.dataset.a==="dash") dash();
+}
+$("pad").addEventListener("pointerdown",function(e){
+  var el=e.target.closest(".k"); if(!el||el.id==="log") return;
+  e.preventDefault(); swallow=Date.now(); press(el);
+  if(el.dataset.a==="del"){ clearTimeout(holdT); holdT=setTimeout(clearAll,480); }
+});
+["pointerup","pointercancel","pointerleave"].forEach(function(ev){ $("pad").addEventListener(ev,function(){ clearTimeout(holdT); }); });
+$("pad").addEventListener("click",function(e){               // keyboard / assistive activation
+  var el=e.target.closest(".k"); if(!el||el.id==="log") return;
+  if(Date.now()-swallow<700) return; press(el);
+});
+elAlt.addEventListener("click",function(){ rank=code[2]; code=code.slice(0,2); field="rank"; paint(); });
+
+document.addEventListener("keydown",function(e){
+  if(e.metaKey||e.ctrlKey||e.altKey) return;
+  var tag=(e.target.tagName||"").toLowerCase();
+  if(tag==="input"||tag==="textarea"){ if(e.key==="Escape") e.target.blur(); return; }
+  if(!$("sheet").hidden){ if(e.key==="Escape") closeSheet(); return; }
+  if(wide.matches||tab==="plate"){
+    if(/^[0-9]$/.test(e.key)){ digit(e.key); flash('[data-d="'+e.key+'"]'); e.preventDefault(); }
+    else if(e.key==="Backspace"){ del(); flash('[data-a="del"]'); e.preventDefault(); }
+    else if(e.key==="-"||e.key===" "){ dash(); flash('[data-a="dash"]'); e.preventDefault(); }
+    else if(e.key==="Enter"){ if(!btn.disabled&&!justLogged){ logIt(); e.preventDefault(); } }
+    else if(e.key==="Escape"){ clearAll(); }
+    else if(e.key==="/"&&wide.matches){ go("find"); $("q").focus(); e.preventDefault(); }
+  }
+});
+function flash(sel){ var el=$("pad").querySelector(sel); if(!el) return; el.classList.add("hit"); setTimeout(function(){ el.classList.remove("hit"); },110); }
+
+/* ---------- logging ---------- */
+function logIt(){
+  var n=parseInt(code,10); if(!CODES[n]||justLogged) return;
+  var t=Date.now();
+  var s={id:t.toString(36)+"-"+n,t:t,c:n,r:rank?parseInt(rank,10):null,lat:null,lon:null,p:null};
+  sights.unshift(s); save(); lastId=s.id; justLogged=true;
+  btn.classList.add("done"); btn.textContent="Logged ✓"; btn.disabled=true;
+  toast(CODES[n][0]+" logged","Undo",function(){ removeSighting(s.id); clearPlate(); code=String(n); rank=s.r?String(s.r):""; paint(); });
+  if(navigator.storage&&navigator.storage.persist){ try{ navigator.storage.persist(); }catch(e){} }
+  if(meta.gps!==false&&navigator.geolocation){
+    navigator.geolocation.getCurrentPosition(function(pos){
+      if(sights.indexOf(s)<0) return;
+      s.lat=+pos.coords.latitude.toFixed(5); s.lon=+pos.coords.longitude.toFixed(5);
+      var p=nearestPlace(s.lat,s.lon);
+      if(p){ s.p=p.id; toast("At "+p.name); }
+      else if(lastId===s.id&&justLogged){ elNameit.hidden=false; }
+      save(); renderSide();
+    },function(){},{enableHighAccuracy:false,timeout:6000,maximumAge:120000});
+  }
+  paint(); renderSide();
+}
+btn.addEventListener("click",logIt);
+function removeSighting(id){
+  for(var i=0;i<sights.length;i++) if(sights[i].id===id){ var s=sights.splice(i,1)[0]; save(); renderSide(); return {s:s,i:i}; }
+  return null;
+}
+function savePlace(){
+  var nm=$("pname").value.trim(); if(!nm) return;
+  var s=null; for(var i=0;i<sights.length;i++) if(sights[i].id===lastId){ s=sights[i]; break; }
+  if(!s||s.lat==null) return;
+  var p={id:"p"+Date.now().toString(36),name:nm,lat:s.lat,lon:s.lon};
+  places.push(p); savePlaces(); s.p=p.id; save();
+  $("pname").value=""; $("pname").blur(); elNameit.hidden=true; toast("Spot saved"); renderSide();
+}
+$("psave").addEventListener("click",savePlace);
+$("pname").addEventListener("keydown",function(e){ if(e.key==="Enter") savePlace(); });
+
+/* ---------- toast ---------- */
+var toastT=null,toastFn=null;
+function toast(msg,action,fn){
+  $("toast-t").textContent=msg; var b=$("toast-b");
+  b.hidden=!action; b.textContent=action||""; toastFn=fn||null;
+  $("toast").classList.add("on"); clearTimeout(toastT);
+  toastT=setTimeout(function(){ $("toast").classList.remove("on"); },action?4500:2000);
+}
+$("toast-b").addEventListener("click",function(){ $("toast").classList.remove("on"); if(toastFn){ var f=toastFn; toastFn=null; f(); } });
+
+/* ---------- codes list ---------- */
+var LIST=KEYS.map(function(k){ var c=CODES[k]; return {n:k,en:c[0],iso:c[1],de:c[2],key:norm(c[0]+" "+c[2])}; })
+  .sort(function(a,b){ return a.en.localeCompare(b.en); });
+var filt="all";
+function renderFind(){
+  var q=norm($("q").value.trim());
+  var rows=LIST.filter(function(r){
+    if(filt==="seen"&&!seenBy[r.n]) return false;
+    if(filt==="unseen"&&seenBy[r.n]) return false;
+    return !q||r.key.indexOf(q)>=0||String(r.n).indexOf(q)===0;
+  });
+  if(q&&/^\d+$/.test(q)) rows.sort(function(a,b){ return a.n-b.n; });
+  $("qlist").innerHTML=rows.map(function(r){
+    return '<button class="row" data-c="'+r.n+'"><span class="f">'+flagOf(r.iso)+'</span><span class="m"><div class="t">'+esc(r.en)+'</div>'+
+      (r.de!==r.en?'<div class="s">'+esc(r.de)+'</div>':'')+'</span>'+
+      (seenBy[r.n]?'<span class="badge">'+seenBy[r.n]+'×</span>':'')+'<span class="n">0 '+r.n+'</span></button>';
+  }).join("")||'<div class="empty">'+(filt==="seen"&&!q?"Nothing logged yet.":"Nothing matches.")+'</div>';
+}
+$("q").addEventListener("input",renderFind);
+$("filt").addEventListener("click",function(e){
+  var b=e.target.closest("button"); if(!b) return; filt=b.dataset.f;
+  [].forEach.call(this.children,function(x){ x.classList.toggle("on",x===b); }); renderFind();
+});
+$("qlist").addEventListener("click",function(e){
+  var r=e.target.closest(".row"); if(!r) return;
+  clearPlate(); code=r.dataset.c; paint(); if(!wide.matches) go("plate");
+});
+
+/* ---------- log ---------- */
+function dayLabel(ts){
+  var d=new Date(ts),now=new Date(),a=new Date(d.getFullYear(),d.getMonth(),d.getDate()),b=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  var diff=Math.round((b-a)/864e5);
+  if(diff===0) return "Today"; if(diff===1) return "Yesterday";
+  return d.toLocaleDateString(undefined,{weekday:"short",day:"numeric",month:"short",year:d.getFullYear()!==now.getFullYear()?"numeric":undefined});
+}
+function renderLog(){
+  if(!sights.length){ $("loglist").innerHTML='<div class="empty">No sightings yet.<br>Look up a plate, then tap Log sighting.</div>'; return; }
+  var h="",last="";
+  sights.slice(0,500).forEach(function(s){
+    var c=CODES[s.c]||["Unknown",""],dl=dayLabel(s.t);
+    if(dl!==last){ h+='<div class="day">'+esc(dl)+'</div>'; last=dl; }
+    var sub=new Date(s.t).toLocaleTimeString(undefined,{hour:"2-digit",minute:"2-digit"}),pn=s.p?placeName(s.p):null;
+    if(pn) sub+=" · "+pn; else if(s.lat!=null) sub+=" · location saved";
+    h+='<div class="row"><span class="f">'+flagOf(c[1])+'</span><span class="m"><div class="t">'+esc(c[0])+'</div><div class="s">'+esc(sub)+
+      '</div></span><span class="n">'+plateText(s.c,s.r)+'</span><button class="x" data-del="'+esc(s.id)+'" aria-label="Delete sighting">×</button></div>';
+  });
+  if(sights.length>500) h+='<p class="note">Showing the latest 500 of '+sights.length+'. Export has everything.</p>';
+  $("loglist").innerHTML=h;
+}
+$("loglist").addEventListener("click",function(e){
+  var b=e.target.closest("[data-del]"); if(!b) return;
+  var gone=removeSighting(b.dataset.del); if(!gone) return;
+  toast("Sighting deleted","Undo",function(){ sights.splice(Math.min(gone.i,sights.length),0,gone.s); save(); renderSide(); });
+});
+
+/* ---------- stats + backup ---------- */
+function month(ts){ var d=new Date(ts); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0"); }
+function renderStats(){
+  var h="";
+  if(sights.length){
+    var byV={},byM={},byP={};
+    sights.forEach(function(s){ if(s.r) byV[s.c+"-"+s.r]=1; byM[month(s.t)]=(byM[month(s.t)]||0)+1; if(s.p) byP[s.p]=(byP[s.p]||0)+1; });
+    var uniq=Object.keys(seenBy).filter(function(c){return CODES[c];}).length,months=[],d=new Date();
+    for(var i=11;i>=0;i--) months.push(month(new Date(d.getFullYear(),d.getMonth()-i,1).getTime()));
+    var mx=Math.max.apply(null,months.map(function(m){return byM[m]||0;}).concat([1]));
+    var top=Object.keys(seenBy).sort(function(a,b){return seenBy[b]-seenBy[a];}).slice(0,8);
+    var ones=Object.keys(seenBy).filter(function(c){return seenBy[c]===1;});
+    var tp=Object.keys(byP).sort(function(a,b){return byP[b]-byP[a];}).slice(0,5);
+    h+='<div class="cards"><div class="c"><b>'+sights.length+'</b><span>sightings</span></div>'+
+      '<div class="c"><b>'+uniq+'</b><span>of '+TOTAL+' missions</span></div>'+
+      '<div class="c"><b>'+Object.keys(byV).length+'</b><span>known cars</span></div></div>'+
+      '<div class="prog"><i style="width:'+(uniq/TOTAL*100).toFixed(1)+'%"></i></div>';
+    h+='<h3>Last 12 months</h3><div class="bars">'+months.map(function(m){ return '<i title="'+m+': '+(byM[m]||0)+'" style="height:'+Math.round((byM[m]||0)/mx*100)+'%"></i>'; }).join("")+
+      '</div><div class="blab"><span>'+months[0]+'</span><span>'+months[11]+'</span></div>';
+    h+='<h3>Most seen</h3>'+top.map(function(c){ var k=CODES[c]||["Unknown",""];
+      return '<div class="row"><span class="f">'+flagOf(k[1])+'</span><span class="m"><div class="t">'+esc(k[0])+'</div></span><span class="n">'+seenBy[c]+'×</span></div>'; }).join("");
+    if(tp.length) h+='<h3>Where</h3>'+tp.map(function(p){
+      return '<div class="row"><span class="f">📍</span><span class="m"><div class="t">'+esc(placeName(p)||"Unnamed")+'</div></span><span class="n">'+byP[p]+'×</span></div>'; }).join("");
+    if(ones.length) h+='<h3>Seen once</h3><div class="once">'+ones.map(function(c){ return flagOf((CODES[c]||["",""])[1]); }).join(" ")+'</div>';
+  } else h+='<div class="empty" style="padding:28px 12px">Stats appear once you log a few plates.</div>';
+
+  h+='<h3>Backup</h3><div class="btns"><button class="btn pri" data-act="export">Export log</button><button class="btn" data-act="import">Import</button></div>'+
+    '<p class="note">Your log is stored only on this device, in this app. No account, no server. '+
+    (sights.length?(meta.lastExport?"Last export "+new Date(meta.lastExport).toLocaleDateString()+".":"Not exported yet. An export now and then keeps it safe if the app is ever removed."):"")+'</p>';
+  h+='<h3>Settings</h3><div class="set"><span>Save location with each sighting</span><button class="sw" role="switch" data-act="gps" aria-checked="'+(meta.gps!==false)+'" aria-label="Save location with each sighting"></button></div>';
+  h+='<h3>About</h3><p class="note">Codes from <a href="https://embassy-berlin.net/codes/cd" target="_blank" rel="noopener">embassy-berlin.net</a>, checked '+SRC_DATE+
+    ' ('+TOTAL+' missions). Diplomats carry 0 code-serial; the ambassador’s car is serial 1. Version '+VERSION+'.</p>';
+  if(!standalone) h+='<p class="note">On iPhone: Share, then Add to Home Screen. The installed app keeps its own log, separate from this browser tab, so install first and log there.</p>';
+  $("stats").innerHTML=h;
+}
+$("stats").addEventListener("click",function(e){
+  var b=e.target.closest("[data-act]"); if(!b) return;
+  if(b.dataset.act==="export") exportData();
+  else if(b.dataset.act==="import") openSheet();
+  else if(b.dataset.act==="gps"){ meta.gps=(meta.gps===false); saveMeta(); renderStats(); }
+});
+
+function exportData(){
+  if(!sights.length){ toast("Nothing to export yet"); return; }
+  var txt=JSON.stringify({app:"diplo-plates",v:1,exported:new Date().toISOString(),sightings:sights,places:places},null,1);
+  var d=new Date(),name="diplo-plates-"+d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")+".json";
+  function done(){ meta.lastExport=Date.now(); saveMeta(); renderStats(); }
+  function download(){
+    var a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([txt],{type:"application/json"})); a.download=name;
+    document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },1000); done();
+  }
+  var file=null; try{ file=new File([txt],name,{type:"application/json"}); }catch(e){}
+  if(file&&matchMedia("(pointer:coarse)").matches&&navigator.canShare&&navigator.canShare({files:[file]})){
+    navigator.share({files:[file],title:"Diplo Plates log"}).then(done).catch(function(err){ if(!err||err.name!=="AbortError") download(); });
+  } else download();
+}
+
+function importText(txt){
+  var data; txt=String(txt||"").trim();
+  try{ data=JSON.parse(txt); }catch(e){ try{ data=JSON.parse(decodeURIComponent(txt.replace(/^.*#import=/,""))); }catch(e2){ return -1; } }
+  var inS=Array.isArray(data)?data:(data&&data.sightings),inP=(data&&data.places)||[];
+  if(!Array.isArray(inS)) return -1;
+  var have={},haveP={},added=0;
+  sights.forEach(function(s){ have[s.id]=1; }); places.forEach(function(p){ haveP[p.id]=1; });
+  inP.forEach(function(p){
+    if(p&&typeof p.id==="string"&&typeof p.name==="string"&&isFinite(p.lat)&&isFinite(p.lon)&&!haveP[p.id]){
+      places.push({id:p.id,name:p.name.slice(0,60),lat:+p.lat,lon:+p.lon}); haveP[p.id]=1; }
+  });
+  inS.forEach(function(s){
+    if(!s||!isFinite(s.t)||!isFinite(s.c)) return;
+    var id=typeof s.id==="string"&&s.id?s.id:(Number(s.t).toString(36)+"-"+s.c);
+    if(have[id]) return; have[id]=1; added++;
+    sights.push({id:id,t:+s.t,c:+s.c,r:isFinite(s.r)&&s.r!==null&&s.r!==""?+s.r:null,
+      lat:isFinite(s.lat)&&s.lat!==null?+s.lat:null,lon:isFinite(s.lon)&&s.lon!==null?+s.lon:null,p:typeof s.p==="string"?s.p:null});
+  });
+  sights.sort(function(a,b){ return b.t-a.t; });
+  savePlaces(); save(); paint(); renderSide();
+  return added;
+}
+function report(n){ toast(n<0?"That is not a Diplo Plates log":n===0?"Nothing new to import":"Imported "+n+" sighting"+(n===1?"":"s")); return n>=0; }
+function openSheet(){ $("imp-t").value=""; $("sheet").hidden=false; }
+function closeSheet(){ $("sheet").hidden=true; }
+$("imp-x").addEventListener("click",closeSheet);
+$("sheet").addEventListener("click",function(e){ if(e.target===this) closeSheet(); });
+$("imp-go").addEventListener("click",function(){
+  var v=$("imp-t").value.trim();
+  if(v){ if(report(importText(v))) closeSheet(); return; }
+  if(navigator.clipboard&&navigator.clipboard.readText){
+    navigator.clipboard.readText().then(function(t){ if(report(importText(t))) closeSheet(); }).catch(function(){ toast("Paste the text into the box first"); });
+  } else toast("Paste the text into the box first");
+});
+$("imp-file").addEventListener("click",function(){ $("imp-f").click(); });
+$("imp-f").addEventListener("change",function(){
+  var f=this.files&&this.files[0]; if(!f) return; var rd=new FileReader();
+  rd.onload=function(){ if(report(importText(rd.result))) closeSheet(); }; rd.readAsText(f); this.value="";
+});
+
+/* ---------- tabs ---------- */
+var wide=matchMedia("(min-width:900px)"),tab="plate",side="find",app=$("app");
+var standalone=matchMedia("(display-mode:standalone)").matches||navigator.standalone===true;
+function renderSide(){ if(side==="find") renderFind(); else if(side==="log") renderLog(); else renderStats(); }
+function paintTabs(){
+  app.dataset.tab=tab; app.dataset.side=side;
+  [].forEach.call(document.querySelectorAll(".tab"),function(t){
+    var on=wide.matches?t.dataset.p===side:t.dataset.p===tab; t.classList.toggle("on",on);
+    if(on) t.setAttribute("aria-current","page"); else t.removeAttribute("aria-current");
+  });
+}
+function go(p){ tab=p; if(p!=="plate") side=p; paintTabs(); renderSide(); }
+$("tabs").addEventListener("click",function(e){ var t=e.target.closest(".tab"); if(t) go(t.dataset.p); });
+if(wide.addEventListener) wide.addEventListener("change",paintTabs); else if(wide.addListener) wide.addListener(paintTabs);
+
+// back from the background after a while: a fresh plate, ready for the next car
+var hiddenAt=0;
+document.addEventListener("visibilitychange",function(){
+  if(document.hidden){ hiddenAt=Date.now(); return; }
+  if(hiddenAt&&Date.now()-hiddenAt>45000){ clearPlate(); paint(); if(!wide.matches&&$("sheet").hidden) go("plate"); }
+});
+
+/* ---------- start ---------- */
+paint(); paintTabs(); renderSide();
+function hashImport(){
+  if(location.hash.indexOf("#import=")!==0) return;
+  var n=importText(location.hash.slice(8));
+  try{ history.replaceState(null,"",location.pathname); }catch(e){}
+  report(n); if(n>0&&!wide.matches) go("log");
+}
+hashImport(); window.addEventListener("hashchange",hashImport);
+if("serviceWorker" in navigator&&(location.protocol==="https:"||location.hostname==="localhost"||location.hostname==="127.0.0.1")){
+  navigator.serviceWorker.register("sw.js").catch(function(){});
+}
+})();
+</script>
+</body>
+</html>
