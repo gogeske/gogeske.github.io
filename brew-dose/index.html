@@ -1,0 +1,777 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Brew Dose">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#eef1f5" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0a111d" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-512.png">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}</style>
+</head><body>
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Brew Dose</title>
+<style>
+/* Layout: a phone app in one column. An enamel-blue hero holds the glass and the three
+   linked quantities; under it a swipeable scale ruler sets whichever one you know.
+   Tabs at the bottom: Brew, Explore, Saved. System fonts only, so it works with no network. */
+:root {
+  --bg: #eef1f5;
+  --surface: #ffffff;
+  --ink: #101c30;
+  --muted: #5b6779;
+  --line: #d5dbe4;
+  --copper: #a9541f;
+  --copper-soft: #f6e6d9;
+  --on-copper: #ffffff;
+  --hero: #16357c;
+  --hero-ink: #ffffff;
+  --hero-muted: #bccaea;
+  --hero-accent: #ffc08c;
+  --hero-line: #3f5cab;
+  --hero-speck: #2a4a97;
+  --brew-light: #b98349;
+  --brew-dark: #2b1608;
+  --grounds: #1c0e05;
+  --good: #1f7a4d;
+  --shadow: #101c3026;
+  --font-display: ui-serif, "New York", "Iowan Old Style", Georgia, serif;
+  --font-ui: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-num: ui-rounded, "SF Pro Rounded", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0a111d; --surface: #121b2b; --ink: #e9eef6; --muted: #93a1b5; --line: #26334a;
+    --copper: #e79a5e; --copper-soft: #3a2416; --on-copper: #0a111d;
+    --hero: #142a5e; --hero-ink: #ffffff; --hero-muted: #a9b9de; --hero-accent: #ffc08c;
+    --hero-line: #34509a; --hero-speck: #1d3878;
+    --brew-light: #c48a52; --brew-dark: #3a1f0e; --grounds: #1a0d05; --good: #5fd39a; --shadow: #00000080;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0a111d; --surface: #121b2b; --ink: #e9eef6; --muted: #93a1b5; --line: #26334a;
+  --copper: #e79a5e; --copper-soft: #3a2416; --on-copper: #0a111d;
+  --hero: #142a5e; --hero-ink: #ffffff; --hero-muted: #a9b9de; --hero-accent: #ffc08c;
+  --hero-line: #34509a; --hero-speck: #1d3878;
+  --brew-light: #c48a52; --brew-dark: #3a1f0e; --grounds: #1a0d05; --good: #5fd39a; --shadow: #00000080;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: var(--font-ui); font-size: 16px; line-height: 1.45;
+  padding-block: 14px 112px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  -webkit-text-size-adjust: 100%;
+}
+button { font: inherit; color: inherit; cursor: pointer; touch-action: manipulation; min-height: 44px; }
+button:focus-visible, input:focus-visible, .ruler:focus-visible { outline: 2px solid var(--copper); outline-offset: 2px; }
+.app { max-width: 480px; margin: 0 auto; }
+.view { display: flex; flex-direction: column; gap: 16px; }
+.top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+h1 { font-family: var(--font-display); font-size: 26px; font-weight: 700; margin: 0; letter-spacing: -0.01em; }
+h2 { font-family: var(--font-display); font-size: 22px; font-weight: 700; margin: 0; text-wrap: balance; }
+.label { font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.09em; color: var(--muted); font-weight: 650; }
+.muted { color: var(--muted); }
+.small { font-size: 14px; }
+
+/* method strip */
+.strip { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin-inline: -16px; padding-inline: 16px; }
+.strip::-webkit-scrollbar { display: none; }
+.chip {
+  flex: 0 0 auto; border: 1px solid var(--line); background: var(--surface); border-radius: 999px;
+  padding: 9px 15px; font-size: 15px; white-space: nowrap;
+}
+.chip[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--bg); font-weight: 600; }
+.about { margin: 0; font-size: 14.5px; color: var(--muted); }
+.about b { color: var(--ink); font-weight: 600; }
+
+/* hero */
+.hero {
+  background-color: var(--hero); color: var(--hero-ink); border-radius: 22px; padding: 18px;
+  display: grid; grid-template-columns: 96px 1fr; gap: 18px; align-items: stretch;
+  background-image: radial-gradient(var(--hero-speck) 1.2px, transparent 1.6px), radial-gradient(var(--hero-speck) 0.9px, transparent 1.3px);
+  background-size: 23px 19px, 17px 29px; background-position: 3px 5px, 11px 13px;
+}
+.glass {
+  position: relative; border: 2px solid var(--hero-muted); border-top: 0; border-radius: 4px 4px 16px 16px;
+  min-height: 176px; overflow: hidden; background: var(--hero);
+}
+.liquid { position: absolute; left: 0; right: 0; bottom: 0; height: 0; background: var(--brew-light); transition: height .35s ease, background-color .35s ease; }
+.grounds { position: absolute; left: 0; right: 0; bottom: 0; height: 0; background: var(--grounds); transition: height .35s ease; }
+.cap { position: absolute; top: 6px; left: 0; right: 0; text-align: center; font-size: 11px; color: var(--hero-muted); font-variant-numeric: tabular-nums; }
+.reads { display: flex; flex-direction: column; justify-content: space-between; gap: 4px; min-width: 0; }
+.read {
+  display: flex; flex-direction: column; align-items: flex-start; text-align: left; gap: 0;
+  background: transparent; border: 0; border-bottom: 1px solid var(--hero-line); padding: 4px 0 8px; min-width: 0; color: var(--hero-ink);
+}
+.read:last-child { border-bottom: 0; padding-bottom: 0; }
+.read .k { font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.09em; color: var(--hero-muted); font-weight: 650; }
+.read .v { font-family: var(--font-num); font-weight: 700; font-size: 34px; line-height: 1.1; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.read .v small { font-size: 15px; font-weight: 600; color: var(--hero-muted); margin-left: 3px; }
+.read[aria-pressed="true"] .v, .read[aria-pressed="true"] .k { color: var(--hero-accent); }
+.read[aria-pressed="true"] .k::after { content: " · you set"; }
+
+/* setter */
+.setter { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 14px 0 12px; display: flex; flex-direction: column; gap: 10px; }
+.setter-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-inline: 14px; }
+.typed { display: flex; align-items: center; gap: 6px; }
+.nudge { width: 44px; height: 44px; flex: 0 0 auto; border-radius: 50%; border: 1px solid var(--line); background: transparent; font-size: 20px; line-height: 1; }
+.setter-head .typed input { width: 78px; }
+.typed input {
+  width: 92px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--ink);
+  font-family: var(--font-num); font-size: 20px; font-weight: 700; padding: 6px 8px; text-align: right; font-variant-numeric: tabular-nums;
+}
+.ruler-wrap { position: relative; }
+.ruler-wrap::after { content: ""; position: absolute; left: 50%; top: 0; bottom: 18px; width: 3px; margin-left: -1.5px; background: var(--copper); border-radius: 2px; pointer-events: none; }
+.ruler { display: flex; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; }
+.track i { position: absolute; top: 0; width: 1px; height: 1px; scroll-snap-align: center; }
+.ruler::-webkit-scrollbar { display: none; }
+.pad { flex: 0 0 50%; }
+.track {
+  flex: 0 0 auto; position: relative; height: 58px;
+  background-image:
+    linear-gradient(90deg, var(--ink) 0 2px, transparent 2px),
+    linear-gradient(90deg, var(--muted) 0 1px, transparent 1px);
+  background-size: 60px 30px, 12px 16px; background-repeat: repeat-x; background-position: 0 4px, 0 18px;
+}
+.track span { position: absolute; bottom: 0; transform: translateX(-50%); font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.quick { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding-inline: 14px; }
+.quick::-webkit-scrollbar { display: none; }
+.q { flex: 1 0 auto; border: 1px solid var(--line); background: transparent; border-radius: 10px; padding: 9px 12px; font-size: 15px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* strength */
+.row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--surface); }
+.seg button { border: 0; background: transparent; padding: 11px 4px; font-size: 15px; border-left: 1px solid var(--line); }
+.seg button:first-child { border-left: 0; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); font-weight: 600; }
+.stepper { display: flex; align-items: center; gap: 8px; }
+.stepper button { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); font-size: 20px; line-height: 1; }
+.ratio { font-family: var(--font-num); font-weight: 700; font-size: 19px; font-variant-numeric: tabular-nums; min-width: 62px; text-align: center; }
+.block { display: flex; flex-direction: column; gap: 10px; }
+
+/* timer + steps */
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.steps { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 6px; font-size: 15px; }
+.go {
+  border: 0; background: var(--copper); color: var(--on-copper); border-radius: 14px; padding: 14px; font-size: 17px; font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+.go.running { background: var(--ink); color: var(--bg); font-family: var(--font-num); font-size: 30px; padding: 10px; }
+.go.done { background: var(--good); color: var(--surface); }
+.bar { height: 5px; border-radius: 3px; background: var(--line); overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; background: var(--copper); }
+
+.facts { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 7px 14px; font-size: 15px; }
+.facts dt { color: var(--muted); }
+.facts dd { margin: 0; min-width: 0; }
+
+.wrapchips { display: flex; flex-wrap: wrap; gap: 8px; }
+.fixout { font-size: 15px; display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
+.act { border: 1px solid var(--copper); color: var(--copper); background: transparent; border-radius: 10px; padding: 9px 14px; font-weight: 600; font-size: 15px; }
+
+/* explore */
+.ex-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.group { display: flex; flex-direction: column; gap: 10px; }
+.way { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+.way-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.way h3 { margin: 0; font-family: var(--font-display); font-size: 19px; }
+.way p { margin: 0; font-size: 15px; }
+.way .meta { font-size: 13px; color: var(--muted); }
+.pill { font-family: var(--font-num); font-weight: 700; font-size: 14px; font-variant-numeric: tabular-nums; color: var(--copper); white-space: nowrap; }
+.way-actions { display: flex; gap: 8px; align-items: center; justify-content: space-between; }
+.tried { border: 1px dashed var(--muted); color: var(--muted); background: transparent; border-radius: 999px; padding: 6px 12px; font-size: 13.5px; }
+.tried[aria-pressed="true"] { border: 1px solid var(--good); color: var(--good); font-weight: 650; transform: rotate(-3deg); }
+
+/* saved */
+.saved-item { display: flex; gap: 10px; align-items: stretch; }
+.saved-item .load { flex: 1; min-width: 0; text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; display: flex; flex-direction: column; gap: 2px; }
+.saved-item .load b { font-family: var(--font-display); font-size: 17px; }
+.saved-item .del { border: 1px solid var(--line); background: transparent; border-radius: 14px; padding: 0 12px; font-size: 14px; color: var(--muted); }
+.gear-row { display: flex; gap: 10px; align-items: center; justify-content: space-between; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 10px 12px; }
+.gear-row .who { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.gear-row .who b { font-family: var(--font-display); font-size: 17px; }
+.gear-row .typed input { width: 74px; font-size: 17px; }
+.gear-row .del { border: 1px solid var(--line); background: transparent; border-radius: 10px; padding: 8px 10px; font-size: 14px; color: var(--muted); }
+#gearName { flex: 1; min-width: 0; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--ink); font: inherit; padding: 8px 10px; }
+.q.gear { border-color: var(--copper); color: var(--copper); font-weight: 600; }
+.empty { border: 1px dashed var(--line); border-radius: 16px; padding: 22px 16px; text-align: center; color: var(--muted); font-size: 15px; }
+
+/* tab bar */
+.tabs {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; pointer-events: none;
+  display: flex; justify-content: center;
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.tabs div {
+  pointer-events: auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; width: 100%; max-width: 340px; padding: 5px;
+  border: 1px solid var(--line); border-radius: 999px; box-shadow: 0 8px 28px var(--shadow);
+  background: var(--surface);
+  background: color-mix(in srgb, var(--surface) 72%, transparent);
+  -webkit-backdrop-filter: blur(20px) saturate(1.7); backdrop-filter: blur(20px) saturate(1.7);
+}
+.tab { border: 0; background: transparent; border-radius: 999px; padding: 8px 4px; font-size: 15px; color: var(--muted); }
+.tab[aria-selected="true"] { color: var(--copper); font-weight: 650; background: var(--copper-soft); }
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: .18s; }
+@media (prefers-reduced-motion: reduce) { .liquid, .grounds { transition: none; } }
+</style>
+
+<main class="app">
+  <!-- BREW -->
+  <section class="view" id="view-brew">
+    <div class="top"><h1>Brew Dose</h1><button class="act" id="saveBtn" type="button">Save</button></div>
+    <div class="strip" id="strip" role="group" aria-label="Brew method"></div>
+    <p class="about" id="about"></p>
+
+    <div class="hero">
+      <div class="glass" aria-hidden="true">
+        <span class="cap" id="cap"></span>
+        <div class="liquid" id="liquid"></div>
+        <div class="grounds" id="grounds"></div>
+      </div>
+      <div class="reads" role="group" aria-label="What you want to set">
+        <button class="read" type="button" data-driver="coffee"><span class="k" id="k-coffee">Coffee</span><span class="v" id="r-coffee"></span></button>
+        <button class="read" type="button" data-driver="water"><span class="k">Water</span><span class="v" id="r-water"></span></button>
+        <button class="read" type="button" data-driver="cups"><span class="k">Makes</span><span class="v" id="r-cups"></span></button>
+      </div>
+    </div>
+
+    <div class="setter">
+      <div class="setter-head">
+        <label class="label" for="typed" id="setLabel"></label>
+        <span class="typed"><button class="nudge" id="less" type="button" aria-label="One step less">−</button><input id="typed" type="text" inputmode="decimal" enterkeyhint="done" autocomplete="off"><span class="muted" id="setUnit"></span><button class="nudge" id="more" type="button" aria-label="One step more">+</button></span>
+      </div>
+      <div class="ruler-wrap">
+        <div class="ruler" id="ruler" tabindex="0" role="slider" aria-orientation="horizontal" aria-valuemin="0" aria-label="Amount"><div class="pad"></div><div class="track" id="track"></div><div class="pad"></div></div>
+      </div>
+      <div class="quick" id="quick"></div>
+    </div>
+
+    <div class="block">
+      <div class="row">
+        <span class="label">Strength</span>
+        <span class="stepper">
+          <button type="button" id="weaker" aria-label="Weaker">−</button>
+          <span class="ratio" id="ratio"></span>
+          <button type="button" id="stronger" aria-label="Stronger">+</button>
+        </span>
+      </div>
+      <div class="seg" id="seg">
+        <button type="button" data-preset="mild">Mild</button>
+        <button type="button" data-preset="def">Balanced</button>
+        <button type="button" data-preset="strong">Strong</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <span class="label">How to</span>
+      <ol class="steps" id="steps"></ol>
+      <button class="go" id="go" type="button"></button>
+      <div class="bar" id="bar"><i id="barfill"></i></div>
+    </div>
+
+    <dl class="facts" id="facts"></dl>
+
+    <div class="card">
+      <span class="label">How was it?</span>
+      <div class="wrapchips" id="fix">
+        <button class="chip" type="button" data-fix="right">Just right</button>
+        <button class="chip" type="button" data-fix="weak">Weak</button>
+        <button class="chip" type="button" data-fix="strong">Too strong</button>
+        <button class="chip" type="button" data-fix="bitter">Bitter</button>
+        <button class="chip" type="button" data-fix="sour">Sour</button>
+        <button class="chip" type="button" data-fix="muddy">Muddy</button>
+      </div>
+      <div class="fixout" id="fixout" hidden></div>
+    </div>
+  </section>
+
+  <!-- EXPLORE -->
+  <section class="view" id="view-explore" hidden>
+    <div class="ex-head"><h1>Explore</h1><button class="act" id="surprise" type="button">Surprise me</button></div>
+    <p class="about" id="passport"></p>
+    <div id="ways" class="view"></div>
+  </section>
+
+  <!-- SAVED -->
+  <section class="view" id="view-saved" hidden>
+    <h1>Saved</h1>
+    <div id="savedList" class="view"></div>
+    <h2>My gear</h2>
+    <p class="about">How much water each pot takes. On the Brew tab, tap a pot to fill it and get the coffee dose for your strength.</p>
+    <div id="gearList" class="view"></div>
+  </section>
+</main>
+
+<nav class="tabs" aria-label="Sections"><div role="tablist">
+  <button class="tab" role="tab" data-tab="brew" aria-selected="true">Brew</button>
+  <button class="tab" role="tab" data-tab="explore" aria-selected="false">Explore</button>
+  <button class="tab" role="tab" data-tab="saved" aria-selected="false">Saved</button>
+</div></nav>
+
+<script>
+(function () {
+  'use strict';
+  function plural(n, one, many) { return fmt(n, 1) + ' ' + (n === 1 ? one : many); }
+  function fmt(n, dp) { var p = Math.pow(10, dp); return String(Math.round(n * p) / p); }
+  function $(id) { return document.getElementById(id); }
+  function all(sel, fn) { Array.prototype.forEach.call(document.querySelectorAll(sel), fn); }
+
+  var MUG = ['mug', 'mugs'], CUP = ['cup', 'cups'], SMALL = ['small cup', 'small cups'], GLASS = ['glass', 'glasses'];
+  var M = {
+    press: { name: 'French press', group: 'Everyday', place: 'Everyday', blurb: 'Full body, a little sediment, no paper in the way.',
+      def: 15, mild: 17, strong: 13, min: 11, max: 19, keep: 2.2, serve: 250, unit: MUG, start: 43, src: 1,
+      grind: 'Coarse', temp: 'Just off the boil, about 95 °C',
+      steps: ['Coffee in, pour all the water, stir once', 'Steep 4 minutes', 'Press slowly and pour it all out'], timer: [240, 'steep'] },
+    pour: { name: 'Pour-over', group: 'Everyday', place: 'Everyday', blurb: 'Clean and bright through a paper filter.',
+      def: 16, mild: 17, strong: 15, min: 13, max: 19, keep: 2, serve: 250, unit: MUG, start: 18, src: 1,
+      grind: 'Medium-fine', temp: '92 to 96 °C',
+      steps: ['Rinse the paper, add the coffee', 'Bloom with twice the coffee weight in water for 30 to 45 s', 'Pour the rest in slow circles, finished by about 3 minutes'], timer: [180, 'brew'] },
+    aero: { name: 'AeroPress', group: 'Everyday', place: 'Everyday', blurb: 'One clean mug, fast, hard to get wrong.',
+      def: 16, mild: 18, strong: 13, min: 6, max: 19, keep: 2, serve: 200, unit: MUG, start: 12, src: 0,
+      grind: 'Medium-fine', temp: 'Just off the boil for light roasts, cooler for dark',
+      steps: ['Coffee in, pour all the water, fit the plunger to stop the drip', 'Wait 2 minutes, swirl, wait 30 s more', 'Press gently'], timer: [120, 'steep'] },
+    moka: { name: 'Moka pot', group: 'Everyday', place: 'Italy', blurb: 'Stovetop pressure. Short, dense, a little rough around the edges.',
+      def: 9, mild: 10, strong: 7, min: 6, max: 11, keep: 1.5, serve: 50, unit: SMALL, start: 18, src: 1,
+      grind: 'Fine, a touch coarser than espresso', temp: 'The basket decides the dose. Fill it level, no tamping',
+      steps: ['Hot water in the base up to the valve', 'Medium-low heat, lid open', 'Off the heat as soon as it sputters'] },
+    cold: { name: 'Cold brew', group: 'Everyday', place: 'Everyday', blurb: 'Time instead of heat. Smooth, sweet, low on bite.',
+      def: 11, mild: 14, strong: 5, min: 4, max: 16, keep: 2.5, serve: 250, unit: GLASS, start: 70, src: 1,
+      grind: 'Coarse', temp: 'Cold or room temperature',
+      steps: ['Stir the coffee into cold water', 'Fridge for 12 to 18 hours', 'Strain through paper or cloth. At 1:5 it is a concentrate, cut it with equal parts water or milk'], ready: 14 },
+
+    pot: { name: 'Finnish pot', group: 'Boiled in the pot', place: 'Finland', blurb: 'Pannukahvi. Light roast in an open pot, the way it is made over a fire.',
+      def: 16, mild: 18, strong: 14, min: 12, max: 20, keep: 2, serve: 150, unit: CUP, start: 30, src: 0,
+      grind: 'Coarse, light roast', temp: 'Boiling, then off the heat',
+      steps: ['Bring the water to a boil', 'Off the heat, stir the coffee in', 'Back on the heat just until it rises once', 'Rest 5 minutes so the grounds sink, then pour gently'], timer: [300, 'rest'] },
+    kaffeost: { name: 'Kaffeost', group: 'Boiled in the pot', place: 'Lapland', blurb: 'Pot coffee poured over cubes of leipäjuusto, the squeaky bread cheese. The cheese softens and drinks the coffee.',
+      def: 16, mild: 18, strong: 14, min: 12, max: 20, keep: 2, serve: 150, unit: CUP, start: 30, src: 0,
+      grind: 'Coarse, light roast', temp: 'Boiling, then off the heat',
+      steps: ['Make pot coffee: boil, stir the coffee in, let it rise once', 'Rest 5 minutes so the grounds sink', 'Cheese cubes in the cup, pour the coffee over, eat the cheese with a spoon'], timer: [300, 'rest'],
+      extra: function (a) { return 'Bread cheese, about ' + fmt(Math.max(1, Math.round(a.cups)) * 30, 0) + ' g in cubes'; } },
+    egg: { name: 'Egg coffee', group: 'Boiled in the pot', place: 'Scandinavia, American Midwest', blurb: 'An egg stirred into the grounds binds the fines. The cup comes out clear and soft with almost no bitterness.',
+      def: 16, mild: 18, strong: 14, min: 12, max: 20, keep: 2, serve: 150, unit: CUP, start: 60, src: 0,
+      grind: 'Coarse', temp: 'Boiling',
+      steps: ['Mix the grounds with the egg and a splash of cold water', 'Stir into boiling water and simmer 3 minutes', 'Off the heat, add a cup of cold water so the raft sinks', 'Strain'], timer: [180, 'simmer'],
+      extra: function (a) { return plural(Math.max(1, Math.round(a.w / 1000)), 'egg', 'eggs'); } },
+    cezve: { name: 'Turkish / Greek', group: 'Boiled in the pot', place: 'Turkey, Greece, the Balkans', blurb: 'Powder-fine coffee heated slowly in a cezve or briki. Thick, foamy, drunk off the grounds.',
+      def: 10, mild: 12, strong: 8, min: 7, max: 13, keep: 0, serve: 70, unit: SMALL, start: 7, src: 1, cchips: [7, 14, 21, 28],
+      grind: 'Powder fine', temp: 'Cold water. Sugar goes in now, not later',
+      steps: ['Cold water, coffee and sugar in the pot, stir once', 'Heat slowly, do not stir again', 'Pull it when the foam rises, before it boils over'],
+      extra: function (a) { return 'Cardamom, ' + plural(Math.max(1, Math.round(a.cups)), 'pinch', 'pinches') + ' if you like'; } },
+    qahwa: { name: 'Arabic qahwa', group: 'Boiled in the pot', place: 'Arabian Peninsula', blurb: 'Pale roast simmered long and perfumed with cardamom. Poured in tiny cups, with dates.',
+      def: 16, mild: 24, strong: 12, min: 10, max: 30, keep: 2, serve: 60, unit: ['finjan', 'finjans'], start: 30, src: 1, simmer: 1,
+      grind: 'Medium to coarse, very light roast', temp: 'Simmering',
+      steps: ['Simmer the coffee about 10 minutes', 'Spices in near the end', 'Let it settle, then strain'], timer: [600, 'simmer'],
+      extra: function (a) { return 'Cardamom about ' + fmt(a.c * 0.3, 1) + ' g crushed, up to ' + fmt(a.c, 0) + ' g for equal parts. Saffron or a clove if you like'; } },
+    olla: { name: 'Café de olla', group: 'Boiled in the pot', place: 'Mexico', blurb: 'Clay-pot coffee with cinnamon and raw cane sugar. Thin, sweet and warming by design.',
+      def: 30, mild: 45, strong: 18, min: 14, max: 48, keep: 2, serve: 200, unit: CUP, start: 30, src: 1,
+      grind: 'Medium, dark roast', temp: 'Bring to a boil, then off the heat',
+      steps: ['Water, cinnamon and piloncillo in the pot. Heat until the sugar dissolves', 'Bring to a boil, stir the coffee in, off the heat', 'Steep 5 minutes, strain'], timer: [300, 'steep'],
+      extra: function (a) { return 'Cinnamon, ' + plural(Math.max(1, Math.round(a.w / 1000)), 'stick', 'sticks') + '. Piloncillo or dark sugar, about ' + fmt(a.w * 0.07, 0) + ' g'; } },
+    tubruk: { name: 'Kopi tubruk', group: 'Boiled in the pot', place: 'Indonesia', blurb: 'Nothing but a glass. Fine coffee, sugar, boiling water, and patience while the grounds sink.',
+      def: 12, mild: 15, strong: 10, min: 8, max: 16, keep: 2, serve: 150, unit: GLASS, start: 12, src: 1, cchips: [10, 12, 15, 24],
+      grind: 'Fine', temp: 'Boiling',
+      steps: ['Coffee and sugar straight into the glass', 'Pour boiling water, stir', 'Wait 4 minutes for the grounds to sink, drink from the top'], timer: [240, 'settle'] },
+
+    phin: { name: 'Vietnamese phin', group: 'Slow and strong', place: 'Vietnam', blurb: 'A small steel filter that drips at its own pace. Dense coffee, usually over condensed milk.',
+      def: 6, mild: 8, strong: 4.5, min: 4, max: 10, keep: 2, serve: 70, unit: GLASS, start: 16, src: 1, cchips: [16, 20, 25, 32],
+      grind: 'Medium', temp: 'Just off the boil',
+      steps: ['Condensed milk in the glass if you want it sweet', 'Coffee in, press the insert on, wet the grounds, wait 30 s', 'Fill up, lid on, let it drip 5 to 6 minutes'], timer: [330, 'drip'],
+      extra: function (a) { return 'Condensed milk, 1 to 2 tablespoons per glass'; } },
+    kaapi: { name: 'South Indian filter', group: 'Slow and strong', place: 'South India', blurb: 'A thick decoction from a two-chamber brass filter, cut with hot milk and poured back and forth until it froths.',
+      def: 5.5, mild: 7, strong: 4.5, min: 4, max: 8, keep: 2, serve: 50, unit: ['serving', 'servings'], start: 18, src: 1, cchips: [18, 27, 36],
+      grind: 'Fine, filter-coffee grind', temp: 'About 95 °C',
+      steps: ['Coffee in the top chamber, press the disc on', 'Pour the water, lid on', 'Let it drip about 10 minutes', 'Mix with hot milk and pour between tumbler and bowl for froth'], timer: [600, 'drip'],
+      extra: function (a) { return 'Hot milk, about ' + fmt(a.out * 1.2, 0) + ' ml (60 ml per 50 ml of decoction)'; } },
+
+    thai: { name: 'Thai iced tea', group: 'Not coffee', place: 'Thailand', stuff: 'tea', blurb: 'Cha yen. The orange tea mix brewed strong and sweet, poured over a glass packed with ice, finished with two kinds of milk.',
+      def: 16, mild: 19, strong: 13, min: 10, max: 22, keep: 3, serve: 180, unit: GLASS, start: 30, src: 0,
+      grind: 'Thai tea mix, loose', temp: 'Just off the boil',
+      steps: ['Steep the tea 5 minutes, strain through cloth or a fine sieve', 'Stir in the sugar and a pinch of salt while hot, let it cool', 'Pack a glass with ice, pour in the tea, top with the milks'], timer: [300, 'steep'],
+      extra: function (a) { var g = Math.max(1, Math.round(a.cups)); return 'Sugar about ' + fmt(a.w * 0.053, 0) + ' g. Per glass: 1½ tbsp condensed milk and 2 to 3 tbsp evaporated milk, so ' + fmt(g * 1.5, 1) + ' and ' + (g * 2) + ' to ' + (g * 3) + ' tbsp in total'; } }
+  };
+  var ORDER = Object.keys(M);
+  var DR = {
+    coffee: { label: 'Coffee', unit: 'g', max: 150, step: 1, dp: 1 },
+    water: { label: 'Water', unit: 'ml', max: 2000, step: 10, dp: 0 },
+    cups: { label: 'Servings', unit: '', max: 12, step: 0.5, dp: 1 }
+  };
+  var TICK = 12;
+
+  /* ---------- state ---------- */
+  var KEY = 'brewdose.v2';
+  var S = { method: 'press', per: {}, saved: [], tried: {}, gear: [
+    { id: 1, name: 'Chambord', method: 'press', ml: 300 },
+    { id: 2, name: 'Eileen', method: 'press', ml: 900 },
+    { id: 3, name: 'Phin', method: 'phin', ml: 100 }
+  ] };
+  try {
+    var raw = JSON.parse(localStorage.getItem(KEY) || localStorage.getItem('brewdose.v1') || 'null');
+    if (raw && raw.per) {
+      if (M[raw.method]) S.method = raw.method;
+      S.per = raw.per; S.saved = Array.isArray(raw.saved) ? raw.saved : []; S.tried = raw.tried || {};
+      if (Array.isArray(raw.gear)) S.gear = raw.gear;
+    }
+  } catch (e) {}
+  ORDER.forEach(function (k) {
+    var m = M[k], p = S.per[k];
+    if (!p || !(p.ratio >= m.min && p.ratio <= m.max) || !(p.amount >= 0) || !DR[p.driver]) S.per[k] = { ratio: m.def, driver: 'coffee', amount: m.start };
+  });
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+  function cur() { return S.per[S.method]; }
+  function calcFor(m, p) {
+    var r = p.ratio, c, w;
+    if (p.driver === 'coffee') { c = p.amount; w = c * r; }
+    else if (p.driver === 'water') { w = p.amount; c = w / r; }
+    else { w = (p.amount * m.serve) / (1 - m.keep / r); c = w / r; }
+    var out = Math.max(0, w - m.keep * c);
+    return { c: c, w: w, out: out, cups: out / m.serve };
+  }
+  function calc() { return calcFor(M[S.method], cur()); }
+
+  /* ---------- ruler ---------- */
+  var ruler = $('ruler'), track = $('track'), userScroll = false, rulerFor = '';
+  ['touchstart', 'pointerdown', 'wheel'].forEach(function (ev) {
+    ruler.addEventListener(ev, function () { userScroll = true; }, { passive: true });
+  });
+  function drv() {
+    var d = DR[cur().driver], m = M[S.method];
+    var step = d.step, max = d.max;
+    if (cur().driver === 'water' && m.serve <= 100) { step = 5; max = 1000; }
+    return { label: d.label, unit: cur().driver === 'cups' ? m.unit[1] : d.unit, max: max, step: step, dp: d.dp };
+  }
+  function buildRuler() {
+    var d = drv(), n = Math.round(d.max / d.step), html = '';
+    for (var i = 0; i <= n; i += 10) html += '<span style="left:' + (i * TICK) + 'px">' + fmt(i * d.step, 1) + '</span>';
+    for (var j = 0; j <= n; j++) html += '<i style="left:' + (j * TICK) + 'px"></i>';
+    track.style.width = (n * TICK + 2) + 'px';
+    track.innerHTML = html;
+    rulerFor = S.method + cur().driver;
+  }
+  function setRuler() {
+    if (rulerFor !== S.method + cur().driver) buildRuler();
+    var d = drv(), x = Math.round(Math.min(d.max, cur().amount) / d.step * TICK);
+    userScroll = false; ruler.scrollLeft = x;
+  }
+  ruler.addEventListener('scroll', function () {
+    if (!userScroll) return;
+    var d = drv(), v = Math.round(ruler.scrollLeft / TICK) * d.step;
+    v = Math.max(0, Math.min(d.max, v));
+    if (v === cur().amount) return;
+    cur().amount = v; save(); render('ruler');
+  }, { passive: true });
+  ruler.addEventListener('keydown', function (e) {
+    var d = drv(), dir = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+    if (!dir) return;
+    e.preventDefault();
+    cur().amount = Math.max(0, Math.min(d.max, Math.round(cur().amount / d.step) * d.step + dir * d.step));
+    save(); render();
+  });
+
+  function nudge(dir) {
+    var d = drv();
+    cur().amount = Math.max(0, Math.min(d.max, Math.round(cur().amount / d.step) * d.step + dir * d.step));
+    save(); render();
+  }
+  $('less').addEventListener('click', function () { nudge(-1); });
+  $('more').addEventListener('click', function () { nudge(1); });
+
+  /* ---------- render ---------- */
+  var typed = $('typed');
+  function render(src) {
+    var m = M[S.method], p = cur(), a = calc(), d = drv();
+    all('#strip .chip', function (b) { b.setAttribute('aria-pressed', String(b.dataset.method === S.method)); });
+    $('about').innerHTML = '<b>' + m.place + '.</b> ' + m.blurb;
+
+    $('r-coffee').innerHTML = fmt(a.c, 1) + '<small>g</small>';
+    $('r-water').innerHTML = fmt(a.w, 0) + '<small>ml</small>';
+    $('r-cups').innerHTML = fmt(a.cups, 1) + '<small>' + (Math.round(a.cups * 10) === 10 ? m.unit[0] : m.unit[1]) + ' · ' + fmt(a.out, 0) + ' ml</small>';
+    all('.read', function (b) { b.setAttribute('aria-pressed', String(b.dataset.driver === p.driver)); });
+
+    var capml = [100, 250, 500, 1000, 1500, 2000, 3000].filter(function (v) { return v >= a.w; })[0] || Math.ceil(a.w / 1000) * 1000;
+    $('cap').textContent = capml >= 1000 ? fmt(capml / 1000, 1) + ' L' : capml + ' ml';
+    var t = Math.round((m.max - p.ratio) / (m.max - m.min) * 100);
+    var liquid = $('liquid');
+    liquid.style.height = Math.min(92, a.w / capml * 92) + '%';
+    liquid.style.backgroundColor = 'color-mix(in srgb, var(--brew-dark) ' + t + '%, var(--brew-light))';
+    $('grounds').style.height = Math.min(60, a.c * 2.4 / capml * 92) + '%';
+
+    var stuff = m.stuff || 'coffee';
+    $('k-coffee').textContent = stuff;
+    $('setLabel').textContent = 'Set ' + (p.driver === 'cups' ? 'how many ' + m.unit[1] : p.driver === 'coffee' ? stuff : 'water');
+    $('setUnit').textContent = p.driver === 'cups' ? '' : d.unit;
+    if (document.activeElement !== typed) typed.value = fmt(p.amount, d.dp);
+    ruler.setAttribute('aria-valuemax', d.max);
+    ruler.setAttribute('aria-valuenow', p.amount);
+    ruler.setAttribute('aria-valuetext', fmt(p.amount, d.dp) + ' ' + d.unit);
+    ruler.setAttribute('aria-label', $('setLabel').textContent);
+    if (src !== 'ruler') setRuler();
+    if (src === 'full') {
+      var qs = p.driver === 'coffee' ? (m.cchips || (m.def <= 9 ? [10, 16, 20, 30] : [15, 20, 30, 45, 60]))
+        : p.driver === 'water' ? (m.serve <= 100 ? [1, 2, 3, 4, 6].map(function (n) { return n * m.serve; }) : [250, 350, 500, 750, 1000])
+        : [1, 2, 3, 4, 6];
+      $('quick').innerHTML = S.gear.filter(function (g) { return g.method === S.method && g.ml > 0; }).map(function (g) {
+        return '<button class="q gear" type="button" data-gear="' + g.ml + '">Fill ' + g.name + '</button>';
+      }).join('') + qs.map(function (v) { return '<button class="q" type="button" data-v="' + v + '">' + v + (p.driver === 'cups' ? '' : ' ' + d.unit) + '</button>'; }).join('');
+    }
+
+    $('ratio').textContent = '1:' + fmt(p.ratio, 1);
+    all('#seg button', function (b) { b.setAttribute('aria-pressed', String(m[b.dataset.preset] === p.ratio)); });
+
+    var rows = [['Grind', m.grind], ['Water', m.temp]];
+    if (m.extra) rows.push(['Add', m.extra(a)]);
+    rows.push(['No scale', 'About ' + fmt(a.c / 5, 0) + ' level tablespoons, at roughly 5 g each']);
+    if (a.c > 0) rows.push(['250 g bag', 'Makes ' + fmt(Math.floor(250 / a.c), 0) + ' brews like this']);
+    rows.push(['Per litre', fmt(1000 / p.ratio, 0) + ' g of ' + stuff]);
+    $('facts').innerHTML = rows.map(function (r) { return '<dt>' + r[0] + '</dt><dd>' + r[1] + '</dd>'; }).join('');
+  }
+  function renderMethod() {
+    var m = M[S.method];
+    $('steps').innerHTML = m.steps.map(function (s) { return '<li>' + s + '</li>'; }).join('');
+    stopTimer();
+    $('fixout').hidden = true;
+    all('#fix .chip', function (b) { b.setAttribute('aria-pressed', 'false'); });
+    render('full');
+    var active = document.querySelector('#strip .chip[aria-pressed="true"]');
+    if (active) { var s = $('strip'); s.scrollLeft = active.offsetLeft - s.offsetLeft - 16; }
+  }
+
+  /* ---------- inputs ---------- */
+  $('strip').innerHTML = ORDER.map(function (k) { return '<button class="chip" type="button" data-method="' + k + '">' + M[k].name + '</button>'; }).join('');
+  $('strip').addEventListener('click', function (e) {
+    var b = e.target.closest('.chip'); if (!b) return;
+    S.method = b.dataset.method; save(); renderMethod();
+  });
+  all('.read', function (b) {
+    b.addEventListener('click', function () {
+      var p = cur(), a = calc(), k = b.dataset.driver;
+      if (p.driver === k) { typed.focus(); return; }
+      p.driver = k; p.amount = k === 'coffee' ? Math.round(a.c * 10) / 10 : k === 'water' ? Math.round(a.w) : Math.round(a.cups * 10) / 10;
+      save(); render('full');
+    });
+  });
+  typed.addEventListener('input', function () {
+    var n = parseFloat(typed.value.replace(',', '.'));
+    if (!isFinite(n) || n < 0) return;
+    cur().amount = n; save(); render();
+  });
+  typed.addEventListener('focus', function () { typed.select(); });
+  typed.addEventListener('blur', function () { render(); });
+  typed.addEventListener('keydown', function (e) { if (e.key === 'Enter') typed.blur(); });
+  $('quick').addEventListener('click', function (e) {
+    var b = e.target.closest('.q'); if (!b) return;
+    if (b.dataset.gear) { cur().driver = 'water'; cur().amount = Number(b.dataset.gear); save(); render('full'); return; }
+    cur().amount = Number(b.dataset.v); save(); render();
+  });
+  function setRatio(r) {
+    var m = M[S.method]; cur().ratio = Math.max(m.min, Math.min(m.max, r)); save(); render();
+  }
+  $('weaker').addEventListener('click', function () { setRatio(cur().ratio + 0.5); });
+  $('stronger').addEventListener('click', function () { setRatio(cur().ratio - 0.5); });
+  $('seg').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (b) setRatio(M[S.method][b.dataset.preset]);
+  });
+
+  /* ---------- timer ---------- */
+  var go = $('go'), tick = null, endAt = 0, total = 0, audio = null, lock = null;
+  function mmss(s) { s = Math.max(0, Math.ceil(s)); return Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2); }
+  function idleLabel() {
+    var m = M[S.method];
+    go.className = 'go'; $('barfill').style.width = '0';
+    if (m.timer) { go.hidden = false; $('bar').hidden = false; go.textContent = 'Start ' + mmss(m.timer[0]) + ' ' + m.timer[1]; }
+    else if (m.ready) { go.hidden = false; $('bar').hidden = true; go.textContent = 'When is it ready?'; }
+    else { go.hidden = true; $('bar').hidden = true; }
+  }
+  function stopTimer() {
+    if (tick) clearInterval(tick); tick = null;
+    if (lock) { try { lock.release(); } catch (e) {} lock = null; }
+    idleLabel();
+  }
+  function beep() {
+    try {
+      if (!audio) return;
+      [0, 0.35, 0.7].forEach(function (t) {
+        var o = audio.createOscillator(), g = audio.createGain();
+        o.frequency.value = 880; o.connect(g); g.connect(audio.destination);
+        g.gain.setValueAtTime(0.25, audio.currentTime + t);
+        g.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + t + 0.25);
+        o.start(audio.currentTime + t); o.stop(audio.currentTime + t + 0.26);
+      });
+    } catch (e) {}
+    try { if (navigator.vibrate) navigator.vibrate([200, 100, 200]); } catch (e) {}
+  }
+  function frame() {
+    var left = (endAt - Date.now()) / 1000;
+    if (left <= 0) {
+      clearInterval(tick); tick = null;
+      go.className = 'go done'; go.textContent = 'Done. Tap to reset'; $('barfill').style.width = '100%';
+      beep();
+      if (lock) { try { lock.release(); } catch (e) {} lock = null; }
+      return;
+    }
+    go.textContent = mmss(left);
+    $('barfill').style.width = ((1 - left / total) * 100) + '%';
+  }
+  go.addEventListener('click', function () {
+    var m = M[S.method];
+    if (tick || go.classList.contains('done')) { stopTimer(); return; }
+    if (m.ready) {
+      var d = new Date(Date.now() + m.ready * 3600000), now = new Date();
+      var day = d.getDate() === now.getDate() ? 'today' : 'tomorrow';
+      go.textContent = 'Start now, strain ' + day + ' around ' + ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2);
+      return;
+    }
+    if (!m.timer) return;
+    try { audio = audio || new (window.AudioContext || window.webkitAudioContext)(); audio.resume(); } catch (e) {}
+    try { if (navigator.wakeLock) navigator.wakeLock.request('screen').then(function (l) { lock = l; }).catch(function () {}); } catch (e) {}
+    total = m.timer[0]; endAt = Date.now() + total * 1000;
+    go.className = 'go running'; frame(); tick = setInterval(frame, 250);
+  });
+
+  /* ---------- fix my cup ---------- */
+  var FIX = {
+    right: ['Keep it. Save this recipe so it is one tap away.', 'save'],
+    weak: ['Use more coffee for the same water.', -1],
+    strong: ['Use less coffee for the same water, or top the cup up with hot water.', 1],
+    bitter: ['Over-extracted. Grind a step coarser or cut the time by a third. With dark roasts, slightly cooler water helps.', 0],
+    sour: ['Under-extracted. Grind a step finer, give it a minute longer, and use hotter water.', 0],
+    muddy: ['Grind coarser, wait a minute after the last stir so the fines sink, and leave the last sip in the pot.', 0]
+  };
+  $('fix').addEventListener('click', function (e) {
+    var b = e.target.closest('.chip'); if (!b) return;
+    all('#fix .chip', function (x) { x.setAttribute('aria-pressed', String(x === b)); });
+    var f = FIX[b.dataset.fix], m = M[S.method], out = $('fixout'), html = '<span>' + f[0] + '</span>';
+    if (f[1] === 'save') html += '<button class="act" type="button" data-act="save">Save this recipe</button>';
+    else if (f[1]) {
+      var r = Math.max(m.min, Math.min(m.max, cur().ratio + f[1]));
+      if (r !== cur().ratio) html += '<button class="act" type="button" data-act="ratio" data-r="' + r + '">Set 1:' + fmt(r, 1) + ' for next time</button>';
+      else html += '<span class="muted">Already at the end of the range for this method.</span>';
+    }
+    out.innerHTML = html; out.hidden = false;
+  });
+  $('fixout').addEventListener('click', function (e) {
+    var b = e.target.closest('.act'); if (!b) return;
+    if (b.dataset.act === 'ratio') { setRatio(Number(b.dataset.r)); b.textContent = 'Set'; b.disabled = true; }
+    else saveRecipe(b);
+  });
+
+  /* ---------- saved ---------- */
+  function saveRecipe(btn) {
+    var p = cur();
+    S.saved.unshift({ id: Date.now(), method: S.method, ratio: p.ratio, driver: p.driver, amount: p.amount });
+    save(); renderSaved();
+    var old = btn.textContent; btn.textContent = 'Saved'; btn.disabled = true;
+    setTimeout(function () { btn.textContent = old; btn.disabled = false; }, 1400);
+  }
+  $('saveBtn').addEventListener('click', function () { saveRecipe($('saveBtn')); });
+  function renderSaved() {
+    var el = $('savedList');
+    if (!S.saved.length) { el.innerHTML = '<div class="empty">Nothing saved yet. Dial in a brew, then tap Save on the Brew tab. Your recipes stay on this device.</div>'; return; }
+    el.innerHTML = S.saved.map(function (r) {
+      var m = M[r.method]; if (!m) return '';
+      var a = calcFor(m, r);
+      return '<div class="saved-item"><button class="load" type="button" data-id="' + r.id + '"><b>' + m.name + '</b><span class="small muted">' +
+        fmt(a.c, 1) + ' g · ' + fmt(a.w, 0) + ' ml · 1:' + fmt(r.ratio, 1) + ' · ' + fmt(a.cups, 1) + ' ' + m.unit[1] + '</span></button>' +
+        '<button class="del" type="button" data-del="' + r.id + '">Remove</button></div>';
+    }).join('');
+  }
+  $('savedList').addEventListener('click', function (e) {
+    var l = e.target.closest('.load'), d = e.target.closest('.del');
+    if (l) {
+      var r = S.saved.filter(function (x) { return String(x.id) === l.dataset.id; })[0]; if (!r) return;
+      S.method = r.method; S.per[r.method] = { ratio: r.ratio, driver: r.driver, amount: r.amount };
+      save(); renderMethod(); show('brew');
+    } else if (d) {
+      if (d.dataset.sure) { S.saved = S.saved.filter(function (x) { return String(x.id) !== d.dataset.del; }); save(); renderSaved(); }
+      else { d.dataset.sure = '1'; d.textContent = 'Sure?'; }
+    }
+  });
+
+  /* ---------- gear ---------- */
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function renderGear() {
+    $('gearList').innerHTML = S.gear.map(function (g) {
+      return '<div class="gear-row"><span class="who"><b>' + esc(g.name) + '</b><span class="small muted">' + (M[g.method] ? M[g.method].name : '') + '</span></span>' +
+        '<span class="typed"><input id="gear-' + g.id + '" data-gid="' + g.id + '" type="text" inputmode="numeric" autocomplete="off" aria-label="Water for ' + esc(g.name) + '" value="' + g.ml + '"><span class="muted">ml</span></span>' +
+        '<button class="del" type="button" data-gdel="' + g.id + '">Remove</button></div>';
+    }).join('') +
+      '<div class="gear-row"><input id="gearName" type="text" autocomplete="off" placeholder="New pot" aria-label="Name of the new pot">' +
+      '<span class="typed"><input id="gearMl" type="text" inputmode="numeric" autocomplete="off" placeholder="ml" aria-label="Water it takes"><span class="muted">ml</span></span>' +
+      '<button class="act" type="button" id="gearAdd">Add</button></div>' +
+      '<span class="small muted">A new pot is added for ' + M[S.method].name + ', the method open on the Brew tab.</span>';
+  }
+  $('gearList').addEventListener('input', function (e) {
+    var id = e.target.dataset.gid; if (!id) return;
+    var n = parseFloat(e.target.value.replace(',', '.'));
+    S.gear.forEach(function (g) { if (String(g.id) === id && isFinite(n) && n >= 0) g.ml = n; });
+    save();
+  });
+  $('gearList').addEventListener('click', function (e) {
+    var d = e.target.closest('[data-gdel]');
+    if (d) { S.gear = S.gear.filter(function (g) { return String(g.id) !== d.dataset.gdel; }); save(); renderGear(); return; }
+    if (e.target.id === 'gearAdd') {
+      var name = $('gearName').value.trim(), ml = parseFloat($('gearMl').value.replace(',', '.'));
+      if (!name || !isFinite(ml) || ml <= 0) { $('gearName').focus(); return; }
+      S.gear.push({ id: Date.now(), name: name, method: S.method, ml: ml }); save(); renderGear();
+    }
+  });
+
+  /* ---------- explore ---------- */
+  function renderExplore() {
+    var groups = {}, n = 0;
+    ORDER.forEach(function (k) { (groups[M[k].group] = groups[M[k].group] || []).push(k); if (S.tried[k]) n++; });
+    $('passport').innerHTML = '<b>' + n + ' of ' + ORDER.length + ' tried.</b> Tap Tried to stamp the ones you have made.';
+    $('ways').innerHTML = Object.keys(groups).map(function (g) {
+      return '<div class="group"><span class="label">' + g + '</span>' + groups[g].map(function (k) {
+        var m = M[k];
+        return '<article class="way" id="way-' + k + '"><div class="way-top"><h3>' + m.name + '</h3><span class="pill">1:' + fmt(m.def, 1) + '</span></div>' +
+          '<p>' + m.blurb + '</p><span class="meta">' + m.place + ' · ' + m.grind.toLowerCase() + ' · ' + (m.src ? 'ratio from a published recipe' : 'ratio is a rule of thumb') + '</span>' +
+          '<div class="way-actions"><button class="act" type="button" data-brew="' + k + '">Brew this</button>' +
+          '<button class="tried" type="button" data-tried="' + k + '" aria-pressed="' + Boolean(S.tried[k]) + '">' + (S.tried[k] ? 'Tried ✓' : 'Tried?') + '</button></div></article>';
+      }).join('') + '</div>';
+    }).join('');
+  }
+  $('ways').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-brew]'), t = e.target.closest('[data-tried]');
+    if (b) { S.method = b.dataset.brew; save(); renderMethod(); show('brew'); }
+    else if (t) { S.tried[t.dataset.tried] = !S.tried[t.dataset.tried]; save(); renderExplore(); }
+  });
+  $('surprise').addEventListener('click', function () {
+    var pool = ORDER.filter(function (k) { return !S.tried[k] && k !== S.method; });
+    if (!pool.length) pool = ORDER.filter(function (k) { return k !== S.method; });
+    S.method = pool[Math.floor(Math.random() * pool.length)]; save(); renderMethod(); show('brew');
+  });
+
+  /* ---------- tabs ---------- */
+  function show(tab) {
+    var still = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (document.startViewTransition && !still) document.startViewTransition(function () { swap(tab); });
+    else swap(tab);
+  }
+  function swap(tab) {
+    ['brew', 'explore', 'saved'].forEach(function (t) { $('view-' + t).hidden = t !== tab; });
+    all('.tab', function (b) { b.setAttribute('aria-selected', String(b.dataset.tab === tab)); });
+    window.scrollTo(0, 0);
+    if (tab === 'brew') render('full');
+    if (tab === 'saved') renderGear();
+  }
+  all('.tab', function (b) { b.addEventListener('click', function () { show(b.dataset.tab); }); });
+
+  renderMethod(); renderExplore(); renderSaved();
+  window.addEventListener('load', setRuler);
+
+  if (document.querySelector('link[rel="manifest"]') && 'serviceWorker' in navigator) {
+    try { navigator.serviceWorker.register('sw.js').catch(function () {}); } catch (e) {}
+  }
+})();
+</script>
+
+</body></html>
