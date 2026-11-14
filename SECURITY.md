@@ -8,8 +8,8 @@ The gogeske.com homepage is a client-side static website that prioritizes securi
 
 ### Implemented Security Measures
 
-- **Content Security Policy (CSP)**: `default-src 'none'`. The page's own inline CSS and JS are allowed by SHA-256 hash; nothing else loads or runs, and the page makes no network requests after the HTML
-- **No third parties**: no external images, fonts, scripts or analytics
+- **Content Security Policy (CSP)**: `default-src 'none'`. The page's own inline CSS and JS are allowed by SHA-256 hash; nothing else runs. The only other host allowed is `images.unsplash.com`, for photos
+- **No third-party code**: no external scripts, fonts or analytics
 - **Referrer Policy**: `no-referrer`
 - **Secure DOM Manipulation**: All dynamic content is set with `textContent`
 - **Secure External Links**: opened with `noopener,noreferrer`
