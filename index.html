@@ -12,7 +12,7 @@
 <meta property="og:description" content="Somewhere in the world, someone says hello. Which language is it?">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://gogeske.com">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data: https://images.unsplash.com; style-src 'sha256-MD1sr6uPp22rTfda5Lje5zaw2C7yr2huaFBB9pcv6Pg='; script-src 'sha256-V4J9eUaWqP5fkKPP2x5paKZ7YqTXcEZvihSODNxlX2c='; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data: https://images.unsplash.com; style-src 'sha256-An75/dS8z/w12oC/Y+i/HuxeKXrcLyBH68jIdU/VPmw='; script-src 'sha256-y/NIIxoEngsOnFQNs4JjNK+uVz9/H556tXNXBrKjfYE='; base-uri 'none'; form-action 'none'">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='16' fill='%23101418'/%3E%3Cpath d='M12 9v14l12-7z' fill='%23fff'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://images.unsplash.com">
 <style>
@@ -26,8 +26,8 @@ body{font:500 1rem/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;colo
 body::after{content:"";position:fixed;inset:0;background:linear-gradient(#0006,#0000 30%,#0000 65%,#0007);pointer-events:none}
 .g{position:fixed;z-index:1;font:inherit;color:inherit;border:1px solid #fff3;background:#0f141a66;-webkit-backdrop-filter:blur(16px) saturate(1.4);backdrop-filter:blur(16px) saturate(1.4);border-radius:20px;cursor:pointer}
 .g:focus-visible,a:focus-visible{outline:2px solid #fff;outline-offset:3px}
-#tip{top:max(1rem,env(safe-area-inset-top));left:max(1rem,env(safe-area-inset-left));max-width:min(26rem,calc(100% - 2rem));min-height:2.75rem;padding:.6rem 1rem;text-align:start;transition:transform .15s}
-#tip:active,#nx:active{transform:scale(.97)}
+#tip{top:max(1rem,env(safe-area-inset-top));left:max(1rem,env(safe-area-inset-left));max-width:min(26rem,calc(100% - 5.75rem));min-height:2.75rem;padding:.6rem 1rem;text-align:start;transition:transform .15s}
+#tip:active,#nx:active,#mb:active{transform:scale(.97)}
 #where{font-weight:650;font-size:1.05rem;display:flex;gap:.5rem;align-items:center}
 #where::after{content:"ⓘ";opacity:.6;font-weight:400}
 #tip.open #where::after{content:none}
@@ -39,6 +39,12 @@ body::after{content:"";position:fixed;inset:0;background:linear-gradient(#0006,#
 #mid.off{opacity:0;transform:scale(1.4);pointer-events:none}
 #say{inset:auto 1rem 5.5rem;margin:auto;width:fit-content;max-width:calc(100% - 2rem);padding:1rem 1.25rem;font-size:clamp(1.4rem,5vw,2.25rem);font-weight:650;text-align:center;cursor:inherit}
 #nx{right:max(1rem,env(safe-area-inset-right));bottom:max(1rem,env(safe-area-inset-bottom));width:3.25rem;height:3.25rem;border-radius:50%;font-size:1.5rem;line-height:1;transition:transform .15s}
+#mb{top:max(1rem,env(safe-area-inset-top));right:max(1rem,env(safe-area-inset-right));width:2.75rem;height:2.75rem;border-radius:50%;font-size:1.25rem;line-height:1}
+#menu{top:calc(max(1rem,env(safe-area-inset-top)) + 3.25rem);right:max(1rem,env(safe-area-inset-right));z-index:2;width:min(19rem,calc(100% - 2rem));padding:1rem;background:#0f141acc;cursor:default}
+#menu p{font-size:.9rem;opacity:.85;margin-bottom:.75rem}
+#menu a{display:block;padding:.65rem .75rem;margin:0 -.25rem;border-radius:12px;text-decoration:none;font-weight:650}
+#menu a:hover,#menu a:focus-visible{background:#fff2}
+#menu small{display:block;font-weight:400;font-size:.8rem;opacity:.75}
 #by{position:fixed;z-index:1;left:max(1rem,env(safe-area-inset-left));bottom:max(1rem,env(safe-area-inset-bottom));max-width:calc(100% - 6.5rem);font-size:.75rem;opacity:.75;text-shadow:0 1px 3px #000}
 a{color:inherit}
 [hidden]{display:none!important}
@@ -49,6 +55,8 @@ a{color:inherit}
 <div class="bg" id="lo"></div>
 <div class="bg" id="hi"></div>
 <button class="g" id="tip" aria-expanded="false" hidden><div id="where"></div><div id="what" aria-live="polite" hidden><b></b><span dir="auto"></span><span></span></div></button>
+<button class="g" id="mb" aria-label="Menu" aria-expanded="false" aria-controls="menu">⋯</button>
+<nav class="g" id="menu" hidden><p></p><a href="/language-quiz/">Language Quiz<small></small></a><a href="/brew-dose/">Brew Dose<small></small></a><a href="/diplo-plates/">Diplo Plates<small></small></a></nav>
 <button class="g" id="mid" aria-label="Play"></button>
 <div class="g" id="say" dir="auto" hidden></div>
 <button class="g" id="nx" aria-label="Next" hidden>›</button>
@@ -66,7 +74,7 @@ var P=[
 ["ja-JP","ja","Tokyo","Tokio","JP","1540959733332-eab4deabeeaf","Tianshu Liu","tianshu","こんにちは！お元気ですか？",HA],
 ["pt-BR","pt-br,pt","Rio de Janeiro",0,"BR","1483729558449-99ef09a8c325","Raphael Nogueira","phaelnogueira","Olá! Bom dia, tudo bem?",["Hello! Good morning, all good?","Hallo! Guten Morgen, alles gut?"]],
 ["nl-NL","nl-nl,nl","Amsterdam",0,"NL","1534351590666-13e3e96b5017","Adrien Olichon","adrienolichon","Hallo! Goedemorgen, hoe gaat het?",GM],
-["de-DE","de-de,de","Berlin",0,"DE","1587330979470-3016b6702d89","Ingo Stiller","ingostiller","Hallo! Guten Morgen, wie geht’s?",GM],
+["de-DE","de-de,de","Berlin",0,"DE","1587330979470-3595ac045ab0","Florian Wehde","florianwehde","Hallo! Guten Morgen, wie geht’s?",GM],
 ["it-IT","it","Rome","Rom","IT","1552832230-c0197dd311b5","Davi Costa","davicosta","Ciao! Buongiorno, come stai?",GM],
 ["ru-RU","ru","Moscow","Moskau","RU","1513326738677-b964603b136d","Nikolay Vorobyev","nikolayv","Привет! Доброе утро, как дела?",GM],
 ["pl-PL","pl","Warsaw","Warschau","PL","1544984243-ec57ea16fe25","Jacek Dylag","dylu","Cześć! Dzień dobry, jak się masz?",["Hi! Good day, how are you?","Hallo! Guten Tag, wie geht’s?"]],
@@ -95,8 +103,8 @@ var P=[
 ];
 var de=/^de/i.test(navigator.language||"")?1:0,U=de?"de":"en",
 $=function(i){return document.getElementById(i)},
-lo=$("lo"),hi=$("hi"),tip=$("tip"),where=$("where"),what=$("what"),mid=$("mid"),say=$("say"),nx=$("nx"),by=$("by"),
-S=window.speechSynthesis,ln,rn,seen=[],at=-1,bag=[],cur,step=0,on=0,utter,got={},
+lo=$("lo"),hi=$("hi"),tip=$("tip"),where=$("where"),what=$("what"),mid=$("mid"),say=$("say"),nx=$("nx"),by=$("by"),mb=$("mb"),menu=$("menu"),
+S=window.speechSynthesis,ln,rn,seen=[],at=-1,bag=[],cur,step=0,on=0,utter,got={},dead={},tries=0,
 W=Math.min(2000,Math.ceil(innerWidth*Math.min(devicePixelRatio||1,2)/200)*200),
 H=Math.round(W*innerHeight/innerWidth);
 try{ln=new Intl.DisplayNames([U],{type:"language"});rn=new Intl.DisplayNames([U],{type:"region"})}catch(e){}
@@ -104,13 +112,25 @@ document.documentElement.lang=U;
 mid.setAttribute("aria-label",de?"Anhören":"Listen");
 nx.setAttribute("aria-label",de?"Weiter":"Next");
 by.firstChild.textContent=de?"Foto:":"Photo:";
+mb.setAttribute("aria-label",de?"Menü":"Menu");
+[de?"Die Ecke der Familie Geske im Netz: ein Ratespiel für den Samstagmorgen und ein paar kleine Apps.":"The Geske family’s corner of the web: a guessing game for Saturday mornings, and a few small apps.",
+ de?"Welche Sprache? Vier Antworten, eine Serie":"Which language? Four answers, one streak",
+ de?"Kaffee richtig dosieren":"Coffee dosing calculator",
+ de?"Berliner Diplomatenkennzeichen nachschlagen":"Look up Berlin diplomatic plates"
+].forEach(function(t,i){(i?menu.children[i].lastChild:menu.firstChild).textContent=t});
 if(S)S.getVoices();
 
 function src(p,w,h,q){return"https://images.unsplash.com/photo-"+p[5]+"?auto=format&fit=crop&w="+w+"&h="+h+"&q="+q}
 function load(p,cb){
   var u=src(p,W,H,60),i;
   if(got[u])return cb&&cb(u);
-  i=new Image;i.onload=function(){got[u]=1;cb&&cb(u)};i.src=u;
+  i=new Image;i.onload=function(){got[u]=1;cb&&cb(u)};
+  // A photo that is gone takes its place out of the rotation.
+  i.onerror=function(){dead[p[5]]=1;bag=bag.filter(function(x){return x!=p});
+    var n=seen.indexOf(p,at);
+    if(n>at){seen[n]=pick();load(seen[n])}
+    else if(n==at&&!on&&tries++<5){seen[at]=pick();show(seen[at])}};
+  i.src=u;
 }
 // Best voice for a language: the right region first, a natural voice over a
 // compact one, never one of the novelty voices Apple lists under real languages.
@@ -131,7 +151,7 @@ function speak(){
   if(!S||!window.SpeechSynthesisUtterance)return text();
   var v=voice(cur),busy=S.speaking||S.pending;
   if(!v&&S.getVoices().length)return text();
-  utter=new SpeechSynthesisUtterance(cur[8]);
+  utter=new SpeechSynthesisUtterance(cur[8].replace(/\s*[!！¡]\s*/g,/^(ar|fa|ur)/.test(cur[0])?"، ":/^(ja|zh)/.test(cur[0])?"、":", ").replace(/^[,، ]+/,""));
   if(v)utter.voice=v;
   utter.lang=v?v.lang:cur[0];utter.rate=.85;
   utter.onerror=function(e){if(e.error!="interrupted"&&e.error!="canceled")text()};
@@ -145,6 +165,7 @@ function pick(){
     // Only places this device can pronounce, unless that leaves too few.
     var vs=S?S.getVoices():[],pool=vs.length?P.filter(voice):P;
     if(pool.length<8)pool=P;
+    pool=pool.filter(function(p){return!dead[p[5]]});
     bag=pool.slice();
     for(var i=bag.length,j,t;i>1;){j=Math.random()*i--|0;t=bag[i];bag[i]=bag[j];bag[j]=t}
     if(bag.length>1&&bag[bag.length-1]==cur)bag.reverse();
@@ -190,11 +211,15 @@ function hint(){
 tip.onclick=function(e){e.stopPropagation();hint()};
 nx.onclick=function(e){e.stopPropagation();go(1)};
 by.onclick=function(e){e.stopPropagation()};
-document.body.onclick=start;
+function nav(o){menu.hidden=!o;mb.setAttribute("aria-expanded",o?"true":"false")}
+mb.onclick=function(e){e.stopPropagation();nav(menu.hidden)};
+menu.onclick=function(e){e.stopPropagation()};
+document.body.onclick=function(){menu.hidden?start():nav(0)};
 onkeydown=function(e){
   if(e.metaKey||e.ctrlKey||e.altKey)return;
   var k=e.key.toLowerCase(),b=/^(button|a)$/i.test(e.target.tagName);
-  if(k=="arrowright"){on?go(1):start()}
+  if(k=="escape")nav(0);
+  else if(k=="arrowright"){on?go(1):start()}
   else if(k=="arrowleft")go(-1);
   else if((k==" "||k=="enter")&&!b){e.preventDefault();start()}
   else if(k=="."||k=="h"||k=="arrowdown")hint();

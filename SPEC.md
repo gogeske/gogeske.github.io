@@ -25,6 +25,12 @@ a desktop.
 - Keyboard: Space or Enter listens, Right/Left moves, `.` or H or Down opens
   the next hint, D and S open Daniel's and Stephanie's LinkedIn.
 - 34 places. No place repeats until all have been played.
+- A place whose photo fails to load is dropped from the rotation, so a dead
+  photo link never shows as an empty screen.
+- The menu button top right opens a one-line "what is this" and links to the
+  sub-apps. Add new sub-apps to the `<nav id="menu">` list and its labels.
+- Exclamation marks are turned into commas before speaking, because some
+  voices read them out as words.
 - Voice: Web Speech API. For each language the best installed voice is chosen
   (right region first, enhanced/natural voices preferred, Apple's novelty
   voices avoided). Places the device has no voice for are skipped. If speech is
