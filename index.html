@@ -1,93 +1,171 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hello World - Geske Family</title>
-    <meta name="description"
-        content="A delightful journey through greetings from around the world. Discover how to say hello in different languages with beautiful imagery and native pronunciation.">
-    <meta name="keywords" content="hello, greetings, languages, world, family, travel, culture">
-    <meta name="author" content="Daniel & Stephanie Geske">
-    <meta property="og:title" content="Hello World - Geske Family">
-    <meta property="og:description" content="A delightful journey through greetings from around the world">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://gogeske.com">
-
-    <!-- Security Headers -->
-    <meta http-equiv="Content-Security-Policy"
-        content="default-src 'self'; img-src 'self' https://images.unsplash.com; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'none'; font-src 'self'; object-src 'none'; media-src 'none'; frame-src 'none'; base-uri 'self'; form-action 'none';">
-    <meta http-equiv="X-Content-Type-Options" content="nosniff">
-    <meta http-equiv="X-XSS-Protection" content="1; mode=block">
-    <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
-    <meta http-equiv="Permissions-Policy"
-        content="geolocation=(), microphone=(), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()">
-
-    <!-- External CSS for better organization -->
-    <link rel="stylesheet" href="styles.css">
-
-    <!-- JavaScript files -->
-    <script src="app.js" defer></script>
-
-    <!-- Social Media Meta Tags -->
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Hello World - Geske Family">
-    <meta name="twitter:description" content="A delightful journey through greetings from around the world">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Which language? · Geske Family</title>
+<meta name="description" content="Hear a hello, guess the language. A Saturday-morning family game.">
+<meta name="author" content="Daniel &amp; Stephanie Geske">
+<meta name="theme-color" content="#f6a93b">
+<meta name="referrer" content="no-referrer">
+<meta property="og:title" content="Which language?">
+<meta property="og:description" content="Hear a hello, guess the language.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://gogeske.com">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'sha256-vgP9BnqAofN3EdsYXnxrvArpk1jdBHfVjIpidHwo7vQ='; script-src 'sha256-pxYIGIncm5t6PK87od2rBQ0Zz9hhnB5UAwoK8sl8oNw='; base-uri 'none'; form-action 'none'">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='16' fill='%23f6a93b'/%3E%3Cpath d='M12 9v14l12-7z' fill='%2314110f'/%3E%3C/svg%3E">
+<style>
+*{box-sizing:border-box;margin:0}
+:root{--h:36;--ink:#14110f}
+html,body{height:100%}
+body{font:600 1.125rem/1.3 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:hsl(var(--h) 88% 62%);transition:background .4s;-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%;overscroll-behavior:none}
+main{min-height:100%;min-height:100dvh;max-width:44rem;margin:auto;padding:max(1rem,env(safe-area-inset-top)) max(1rem,env(safe-area-inset-right)) max(1rem,env(safe-area-inset-bottom)) max(1rem,env(safe-area-inset-left));display:flex;flex-direction:column;justify-content:center;gap:1.25rem;text-align:center}
+[hidden]{display:none!important}
+button{font:inherit;color:inherit;cursor:pointer;background:#fff;border:3px solid var(--ink);border-radius:20px;box-shadow:0 5px 0 var(--ink);touch-action:manipulation;transition:transform .08s,box-shadow .08s}
+button:active{transform:translateY(4px);box-shadow:0 1px 0 var(--ink)}
+button:focus-visible{outline:4px solid #fff;outline-offset:3px}
+h1{font-size:clamp(1.25rem,4.5vw,1.75rem);font-weight:800;min-height:1.3em}
+#go{align-self:center;width:min(60vw,15rem);aspect-ratio:1;border-radius:50%;display:grid;place-items:center}
+#go::before{content:"";border-style:solid;border-width:2.6rem 0 2.6rem 4.4rem;border-color:transparent transparent transparent var(--ink);margin-left:1rem}
+#say{padding:1.25rem 1rem;font-size:clamp(1.6rem,6.5vw,3rem);font-weight:800;line-height:1.25;text-wrap:balance;min-height:3.4em}
+#opts{display:grid;grid-template-columns:1fr 1fr;gap:.9rem}
+#opts button{min-height:4rem;padding:.6rem .4rem;font-size:clamp(1rem,4vw,1.35rem);hyphens:auto;overflow-wrap:anywhere}
+#opts .y{background:#15803d;color:#fff}
+#opts .n{background:#b91c1c;color:#fff;animation:s .3s}
+#opts.done button:not(.y):not(.n){opacity:.45}
+#score{font-size:1rem;min-height:1.3em;font-variant-numeric:tabular-nums}
+@keyframes s{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+@media(max-height:36rem){main{gap:.7rem}#say{padding:.7rem;font-size:clamp(1.3rem,5.5vw,2rem);min-height:0}#opts{gap:.6rem}#opts button{min-height:3rem}#go{width:min(45vw,45vh)}}
+@media(max-height:30rem) and (orientation:landscape){main{max-width:none;display:grid;grid-template-columns:1fr 1fr;align-content:center;align-items:center}h1,#go,#score{grid-column:1/-1}#go{justify-self:center}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
 </head>
-
 <body>
-    <!-- Skip navigation for screen readers -->
-    <a href="#main-content" class="skip-link">Skip to main content</a>
+<main>
+<h1 id="q" aria-live="polite">Which language is this?</h1>
+<button id="go" aria-label="Play"></button>
+<button id="say" hidden dir="auto"></button>
+<div id="opts" hidden><button></button><button></button><button></button><button></button></div>
+<p id="score" hidden></p>
+</main>
+<script>
+(function(){
+// code, English name (fallback), lookalike group, voice prefixes, phrase
+var L=[
+["fr","French",0,"fr","Bonjour ! Comment ça va aujourd’hui ?"],
+["es","Spanish",0,"es-es,es","¡Hola! Buenos días, ¿cómo estás?"],
+["pt","Portuguese",0,"pt-br,pt","Olá! Bom dia, tudo bem?"],
+["it","Italian",0,"it","Ciao! Buongiorno, come stai?"],
+["ro","Romanian",0,"ro","Bună! Bună dimineața, ce mai faci?"],
+["en","English",1,"en-gb,en","Hello! Good morning, how are you?"],
+["nl","Dutch",1,"nl","Hallo! Goedemorgen, hoe gaat het?"],
+["sv","Swedish",1,"sv","Hej! God morgon, hur mår du?"],
+["no","Norwegian",1,"nb,no","Hei! God morgen, hvordan har du det?"],
+["da","Danish",1,"da","Hej! Godmorgen, hvordan har du det?"],
+["ru","Russian",2,"ru","Привет! Доброе утро, как дела?"],
+["uk","Ukrainian",2,"uk","Привіт! Доброго ранку, як справи?"],
+["bg","Bulgarian",2,"bg","Здравей! Добро утро, как си?"],
+["pl","Polish",2,"pl","Cześć! Dzień dobry, jak się masz?"],
+["cs","Czech",2,"cs","Ahoj! Dobré ráno, jak se máš?"],
+["hr","Croatian",2,"hr","Bok! Dobro jutro, kako si?"],
+["ar","Arabic",3,"ar","مرحبا! صباح الخير، كيف حالك؟"],
+["fa","Persian",3,"fa","سلام! صبح بخیر، حال شما چطور است؟"],
+["ur","Urdu",3,"ur","السلام علیکم! آپ کیسے ہیں؟"],
+["he","Hebrew",3,"he,iw","שלום! בוקר טוב, מה שלומך?"],
+["hi","Hindi",4,"hi","नमस्ते! आप कैसे हैं?"],
+["bn","Bengali",4,"bn","নমস্কার! আপনি কেমন আছেন?"],
+["th","Thai",4,"th","สวัสดี! สบายดีไหม?"],
+["ja","Japanese",5,"ja","こんにちは！お元気ですか？"],
+["ko","Korean",5,"ko","안녕하세요! 잘 지내세요?"],
+["zh","Chinese",5,"zh-cn,cmn,zh","你好！早上好，你好吗？"],
+["yue","Cantonese",5,"zh-hk,yue","你好！早晨，你好嗎？"],
+["vi","Vietnamese",5,"vi","Xin chào! Bạn có khỏe không?"],
+["tr","Turkish",6,"tr","Merhaba! Günaydın, nasılsın?"],
+["hu","Hungarian",6,"hu","Szia! Jó reggelt, hogy vagy?"],
+["fi","Finnish",6,"fi","Hei! Hyvää huomenta, mitä kuuluu?"],
+["el","Greek",6,"el","Γεια σου! Καλημέρα, τι κάνεις;"],
+["id","Indonesian",6,"id","Halo! Selamat pagi, apa kabar?"],
+["sw","Swahili",6,"sw","Jambo! Habari za asubuhi?"]
+];
+var de=/^de/i.test(navigator.language||""),
+T=de?["Welche Sprache ist das?","Das war ",". Richtig!",".","Serie ","Rekord "]:["Which language is this?","That was ",". Correct!",".","Streak ","Best "],
+$=function(i){return document.getElementById(i)},
+q=$("q"),go=$("go"),say=$("say"),opts=$("opts"),score=$("score"),B=opts.children,
+S=window.speechSynthesis,dn,bag=[],cur,choices,streak=0,best=0,open=0,timer,utter,
+hues=[36,168,268,340,200,96],round=0;
+try{dn=new Intl.DisplayNames([de?"de":"en"],{type:"language"})}catch(e){}
+try{best=+localStorage.best||0}catch(e){}
+document.documentElement.lang=de?"de":"en";
+q.textContent=T[0];
+go.setAttribute("aria-label",de?"Los":"Play");
+if(S)S.getVoices();
 
-    <main id="main-content" role="main" aria-label="Language Explorer Application">
-        <!-- Live region for screen reader announcements -->
-        <div id="live-region" aria-live="polite" aria-atomic="true" class="sr-only"></div>
-
-        <section role="region" aria-label="Current location and phrase display">
-            <div class="ui-element location-bubble" id="location-bubble" role="button" tabindex="0"
-                aria-label="Location information. Press Enter or Space to expand details" aria-expanded="false">
-                <div id="location-name"></div>
-                <div class="click-hint">ⓘ</div>
-                <div class="details" id="details" aria-hidden="true">
-                    <div id="detail-sentence1"></div>
-                    <div id="detail-sentence2"></div>
-                </div>
-            </div>
-        </section>
-
-
-
-
-
-        <aside role="complementary" aria-label="Photo credits and attribution">
-            <div class="ui-element photo-credit" id="photo-credit">
-                Photo by <a href="#" id="photographer-link"></a> on <a href="https://unsplash.com" target="_blank"
-                    rel="noopener noreferrer">Unsplash</a>
-            </div>
-        </aside>
-    </main>
-
-    <div role="dialog" aria-modal="true" aria-labelledby="terminal-header" id="terminal-dialog">
-        <div class="terminal" id="terminal">
-            <div class="terminal-header" id="terminal-header">Language Explorer Help</div>
-            <button class="terminal-close" aria-label="Close help dialog">×</button>
-            <div class="terminal-line"><span class="terminal-prompt">Journey:</span>55 destinations across 35 languages</div>
-            
-            <div style="margin-top: 1.5rem;">
-                <div class="terminal-line"><span class="terminal-prompt">Tap:</span>anywhere to hear phrase again</div>
-                <div class="terminal-line"><span class="terminal-prompt">Swipe:</span>left/right to explore</div>
-                <div class="terminal-line"><span class="terminal-prompt">Details:</span>press . for location info</div>
-            </div>
-            
-            <div style="margin-top: 1.5rem;">
-                <div class="terminal-line"><span class="terminal-prompt">LinkedIn:</span>D for Daniel, S for Stephanie</div>
-            </div>
-            <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.2);">
-                <div class="terminal-line"><span class="terminal-prompt">Build:</span><span id="build-info">dec91bd • 2025-08-22 23:35</span></div></div>
-            </div>
-        </div>
-    </div>
-
+function name(l){var n;try{n=dn&&dn.of(l[0])}catch(e){}return n&&n!=l[0]?n:l[1]}
+function voice(l){
+  var vs=S?S.getVoices():[],p=l[3].split(","),i,j,v;
+  for(i=0;i<p.length;i++)for(j=0;j<vs.length;j++){
+    v=vs[j].lang.replace("_","-").toLowerCase();
+    if(v==p[i]||v.indexOf(p[i]+"-")==0)return vs[j];
+  }
+}
+function shuffle(a){for(var i=a.length,j,t;i>1;){j=Math.random()*i--|0;t=a[i];a[i]=a[j];a[j]=t}return a}
+function speak(){
+  var v=voice(cur);if(!v)return;
+  utter=new SpeechSynthesisUtterance(cur[4]);
+  utter.voice=v;utter.lang=v.lang;utter.rate=.9;
+  S.cancel();S.speak(utter);
+}
+function next(){
+  clearTimeout(timer);
+  // Play by ear where the device has enough voices; otherwise guess from the writing.
+  var pool=L.filter(voice);if(pool.length<8)pool=L;
+  if(!bag.length){bag=shuffle(pool.slice());if(bag.length>1&&bag[bag.length-1]==cur)bag.reverse()}
+  cur=bag.pop();
+  // Lookalikes first, and more of them the longer the streak runs.
+  var near=shuffle(pool.filter(function(l){return l!=cur&&l[2]==cur[2]})).slice(0,1+streak/3|0),
+      far=shuffle(pool.filter(function(l){return l!=cur&&near.indexOf(l)<0}));
+  choices=shuffle([cur].concat(near,far).slice(0,4));
+  for(var i=0;i<4;i++){B[i].className="";B[i].textContent=name(choices[i])}
+  opts.className="";open=1;
+  q.textContent=T[0];
+  say.textContent=cur[4];say.lang=cur[0];
+  say.setAttribute("aria-label",de?"Nochmal hören":"Hear it again");
+  document.documentElement.style.setProperty("--h",hues[round++%hues.length]);
+  show();speak();
+}
+function show(){
+  score.textContent=T[4]+streak+" · "+T[5]+best;
+}
+function pick(i){
+  if(!open){next();return}
+  open=0;
+  var ok=choices[i]==cur;
+  B[choices.indexOf(cur)].className="y";
+  if(!ok)B[i].className="n";
+  opts.className="done";
+  streak=ok?streak+1:0;
+  if(streak>best){best=streak;try{localStorage.best=best}catch(e){}}
+  q.textContent=T[1]+name(cur)+T[ok?2:3];
+  show();
+  timer=setTimeout(next,ok?1400:2600);
+}
+go.onclick=function(){
+  go.hidden=1;say.hidden=opts.hidden=score.hidden=0;
+  next();say.focus();
+};
+say.onclick=function(){open?speak():next()};
+[0,1,2,3].forEach(function(i){B[i].onclick=function(){pick(i)}});
+onkeydown=function(e){
+  if(e.metaKey||e.ctrlKey||e.altKey)return;
+  var k=e.key.toLowerCase();
+  if(!go.hidden&&(k=="enter"||k==" ")){e.preventDefault();go.onclick()}
+  else if(go.hidden&&k>="1"&&k<="4")pick(k-1);
+  else if(go.hidden&&k=="r")speak();
+  else if(k=="d")open_("https://www.linkedin.com/in/dgeske/");
+  else if(k=="s")open_("https://www.linkedin.com/in/stephanie-geske-7185014/");
+};
+function open_(u){window.open(u,"_blank","noopener,noreferrer")}
+})();
+</script>
 </body>
-
 </html>

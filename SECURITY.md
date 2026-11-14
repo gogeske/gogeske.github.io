@@ -2,28 +2,23 @@
 
 ## Security Overview
 
-The Language Explorer is a client-side static website that prioritizes security and user privacy. This document outlines our security practices and how to report security vulnerabilities.
+The gogeske.com homepage is a client-side static website that prioritizes security and user privacy. This document outlines our security practices and how to report security vulnerabilities.
 
 ## Security Features
 
 ### Implemented Security Measures
 
-- **Content Security Policy (CSP)**: Prevents XSS attacks and unauthorized resource loading
-- **Security Headers**: Comprehensive set of security headers including:
-  - `X-Frame-Options: DENY` - Prevents clickjacking
-  - `X-Content-Type-Options: nosniff` - Prevents MIME sniffing attacks
-  - `X-XSS-Protection: 1; mode=block` - Enables XSS filtering
-  - `Referrer-Policy: strict-origin-when-cross-origin` - Controls referrer information
-- **Permissions Policy**: Restricts access to sensitive browser APIs
-- **Secure DOM Manipulation**: All dynamic content uses safe DOM methods
-- **Secure External Links**: All external links use `rel="noopener noreferrer"`
+- **Content Security Policy (CSP)**: `default-src 'none'`. The page's own inline CSS and JS are allowed by SHA-256 hash; nothing else loads or runs, and the page makes no network requests after the HTML
+- **No third parties**: no external images, fonts, scripts or analytics
+- **Referrer Policy**: `no-referrer`
+- **Secure DOM Manipulation**: All dynamic content is set with `textContent`
+- **Secure External Links**: opened with `noopener,noreferrer`
 
 ### Data Privacy
 
-- **No Data Collection**: This application does not collect, store, or transmit any personal data
-- **No Cookies**: No cookies or local storage are used
-- **External Resources**: Images are loaded from Unsplash.com with appropriate security controls
-- **Browser APIs**: Only uses Speech Synthesis API for text-to-speech functionality
+- **No Data Collection**: This application does not collect or transmit any personal data
+- **No Cookies**: The only thing stored is the best streak, a single number in localStorage
+- **Browser APIs**: Only uses the Speech Synthesis API for text-to-speech
 
 ## Supported Versions
 

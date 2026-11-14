@@ -1,18 +1,13 @@
-// Simple service worker for image caching
-const CACHE_NAME = 'language-explorer-v1';
-
-// Cache images from Unsplash
-self.addEventListener('fetch', (event) => {
-    if (event.request.url.includes('images.unsplash.com')) {
-        event.respondWith(
-            caches.open(CACHE_NAME).then(cache => {
-                return cache.match(event.request).then(response => {
-                    return response || fetch(event.request).then(fetchResponse => {
-                        cache.put(event.request, fetchResponse.clone());
-                        return fetchResponse;
-                    });
-                });
-            })
-        );
-    }
-});
+// Retired. The homepage is one small file and needs no service worker.
+// This replaces the old image-caching worker for returning visitors: it clears
+// the homepage's caches (leaving the sub-apps' alone), unregisters itself and
+// reloads any open homepage tabs so they pick up the current page.
+// Keep this file in place; deleting it would strand visitors on the old worker.
+self.addEventListener('install', () => self.skipWaiting());
+self.addEventListener('activate', (e) => e.waitUntil((async () => {
+  const keys = await caches.keys();
+  await Promise.all(keys.filter((k) => !/^(brewdose|diplo)/.test(k)).map((k) => caches.delete(k)));
+  const tabs = await self.clients.matchAll({ type: 'window' });
+  await self.registration.unregister();
+  tabs.forEach((t) => { if (new URL(t.url).pathname === '/') t.navigate(t.url); });
+})()));
