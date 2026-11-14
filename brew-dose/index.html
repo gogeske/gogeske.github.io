@@ -10,14 +10,15 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" href="icon-512.png">
+<title>Brew Dose</title>
 <style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}</style>
 </head><body>
-<meta name="claude:viewport-fit-sides" content="cover">
-<title>Brew Dose</title>
 <style>
-/* Layout: a phone app in one column. An enamel-blue hero holds the glass and the three
-   linked quantities; under it a swipeable scale ruler sets whichever one you know.
-   Tabs at the bottom: Brew, Explore, Saved. System fonts only, so it works with no network. */
+/* Layout: on a phone, one column. An enamel-blue hero holds the glass and the three linked
+   quantities; under it a swipeable scale ruler sets whichever one you know; tabs float at the
+   bottom. From 720px the brew view splits into bench and guide; from 1100px it is a desktop
+   workbench: methods rail, bench, guide, with the tabs in a top bar.
+   System fonts only, so it works with no network. */
 :root {
   --bg: #eef1f5;
   --surface: #ffffff;
@@ -103,8 +104,9 @@ h2 { font-family: var(--font-display); font-size: 22px; font-weight: 700; margin
   position: relative; border: 2px solid var(--hero-muted); border-top: 0; border-radius: 4px 4px 16px 16px;
   min-height: 176px; overflow: hidden; background: var(--hero);
 }
-.liquid { position: absolute; left: 0; right: 0; bottom: 0; height: 0; background: var(--brew-light); transition: height .35s ease, background-color .35s ease; }
-.grounds { position: absolute; left: 0; right: 0; bottom: 0; height: 0; background: var(--grounds); transition: height .35s ease; }
+.liquid { position: absolute; left: -8px; right: -8px; bottom: -24px; height: 24px; background: var(--brew-light); transition: height .45s var(--ease), background-color .35s ease; transform-origin: 50% 100%; transform: skewY(var(--tilt, 0deg)); background-image: linear-gradient(90deg, #ffffff24, transparent 34%, transparent 70%, #00000038); }
+.grounds { position: absolute; left: 0; right: 0; bottom: 0; height: 0; background: var(--grounds); transition: height .45s var(--ease); }
+.glass::after { content: ""; position: absolute; top: 9%; bottom: 12%; left: 9%; width: 7%; border-radius: 9px; background: linear-gradient(#ffffff59, #ffffff14); pointer-events: none; }
 .liquid::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 5px; background: var(--crema); }
 .read .v em { display: block; font-style: normal; font-family: var(--font-ui); font-size: 13px; font-weight: 600; color: var(--hero-muted); line-height: 1.3; }
 .cap { position: absolute; top: 6px; left: 0; right: 0; text-align: center; font-size: 11px; color: var(--hero-muted); font-variant-numeric: tabular-nums; }
@@ -132,7 +134,7 @@ h2 { font-family: var(--font-display); font-size: 22px; font-weight: 700; margin
 }
 .ruler-wrap { position: relative; }
 .ruler-wrap::after { content: ""; position: absolute; left: 50%; top: 0; bottom: 18px; width: 3px; margin-left: -1.5px; background: var(--copper); border-radius: 2px; pointer-events: none; }
-.ruler { display: flex; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; }
+.ruler { display: flex; cursor: grab; -webkit-mask-image: linear-gradient(90deg, transparent, #000 16%, #000 84%, transparent); mask-image: linear-gradient(90deg, transparent, #000 16%, #000 84%, transparent); overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; }
 .track i { position: absolute; top: 0; width: 1px; height: 1px; scroll-snap-align: center; }
 .ruler::-webkit-scrollbar { display: none; }
 .pad { flex: 0 0 50%; }
@@ -150,10 +152,10 @@ h2 { font-family: var(--font-display); font-size: 22px; font-weight: 700; margin
 
 /* strength */
 .row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-.seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--surface); }
-.seg button { border: 0; background: transparent; padding: 11px 4px; font-size: 15px; border-left: 1px solid var(--line); }
-.seg button:first-child { border-left: 0; }
-.seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); font-weight: 600; }
+.seg { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; border: 1px solid var(--line); border-radius: 13px; padding: 3px; background: var(--surface); }
+.seg::before { content: ""; position: absolute; top: 3px; bottom: 3px; left: 3px; width: calc((100% - 6px) / 3); border-radius: 10px; background: var(--ink); opacity: var(--on, 1); transform: translateX(calc(var(--i, 1) * 100%)); transition: transform .5s var(--spring), opacity .2s; }
+.seg button { border: 0; background: transparent; padding: 9px 4px; font-size: 15px; z-index: 1; }
+.seg button[aria-pressed="true"] { color: var(--bg); font-weight: 600; }
 .stepper { display: flex; align-items: center; gap: 8px; }
 .stepper button { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); font-size: 20px; line-height: 1; }
 .ratio { font-family: var(--font-num); font-weight: 700; font-size: 19px; font-variant-numeric: tabular-nums; min-width: 62px; text-align: center; }
@@ -169,7 +171,7 @@ h2 { font-family: var(--font-display); font-size: 22px; font-weight: 700; margin
 .go.running { background: var(--ink); color: var(--bg); font-family: var(--font-num); font-size: 30px; padding: 10px; }
 .go.done { background: var(--good); color: var(--surface); }
 .bar { height: 5px; border-radius: 3px; background: var(--line); overflow: hidden; }
-.bar i { display: block; height: 100%; width: 0; background: var(--copper); }
+.bar i { display: block; height: 100%; width: 0; background: var(--copper); transition: width .25s linear; }
 
 .facts { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 7px 14px; font-size: 15px; }
 .facts dt { color: var(--muted); }
@@ -188,7 +190,7 @@ h2 { font-family: var(--font-display); font-size: 22px; font-weight: 700; margin
 .way p { margin: 0; font-size: 15px; }
 .way .meta { font-size: 13px; color: var(--muted); }
 .pill { font-family: var(--font-num); font-weight: 700; font-size: 14px; font-variant-numeric: tabular-nums; color: var(--copper); white-space: nowrap; }
-.way-actions { display: flex; gap: 8px; align-items: center; justify-content: space-between; }
+.way-actions { margin-top: auto; display: flex; gap: 8px; align-items: center; justify-content: space-between; }
 .tried { border: 1px dashed var(--muted); color: var(--muted); background: transparent; border-radius: 999px; padding: 6px 12px; font-size: 13.5px; }
 .tried[aria-pressed="true"] { border: 1px solid var(--good); color: var(--good); font-weight: 650; transform: rotate(-3deg); }
 
@@ -213,24 +215,147 @@ h2 { font-family: var(--font-display); font-size: 22px; font-weight: 700; margin
   padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
   padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
 }
-.tabs div {
-  pointer-events: auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; width: 100%; max-width: 340px; padding: 5px;
+.tablist {
+  position: relative; pointer-events: auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; width: 100%; max-width: 340px; padding: 5px;
   border: 1px solid var(--line); border-radius: 999px; box-shadow: 0 8px 28px var(--shadow);
   background: var(--surface);
   background: color-mix(in srgb, var(--surface) 90%, transparent);
   -webkit-backdrop-filter: blur(20px) saturate(1.7); backdrop-filter: blur(20px) saturate(1.7);
 }
-.tab { border: 0; background: transparent; border-radius: 999px; padding: 8px 4px; font-size: 15px; color: var(--muted); }
-.tab[aria-selected="true"] { color: var(--copper); font-weight: 650; background: var(--copper-soft); }
-::view-transition-old(root), ::view-transition-new(root) { animation-duration: .18s; }
-@media (prefers-reduced-motion: reduce) { .liquid, .grounds { transition: none; } }
+.tab { border: 0; background: transparent; border-radius: 999px; padding: 8px 4px; font-size: 15px; color: var(--muted); z-index: 1; }
+.tab[aria-selected="true"] { color: var(--copper); font-weight: 650; }
+.ind { position: absolute; top: 5px; bottom: 5px; left: 5px; width: calc((100% - 14px) / 3); border-radius: 999px; background: var(--copper-soft); transform: translateX(calc(var(--i, 0) * (100% + 2px))); transition: transform .5s var(--spring); }
+.brand, .hint, .mname, .strip .grp { display: none; }
+.rail, .bench, .guide, .cols { display: contents; }
+
+/* ---------- feel: things answer the finger ---------- */
+:root { --spring: cubic-bezier(.3, 1.45, .5, 1); --ease: cubic-bezier(.2, .8, .2, 1); }
+@supports (transition-timing-function: linear(0, 1)) {
+  :root { --spring: linear(0, .009, .035 2.1%, .141, .281 6.7%, .723 12.9%, .938 16.7%, 1.017, 1.077, 1.121, 1.149 24.3%, 1.159, 1.163, 1.161, 1.154 29.9%, 1.129 32.8%, 1.051 39.6%, 1.017 43.1%, .991, .977 51%, .974 53.8%, .975 57.1%, .997 69.8%, 1.003 76.9%, 1.004 83.8%, 1); }
+}
+html { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+input { -webkit-user-select: text; user-select: text; }
+@media (display-mode: standalone) { html { touch-action: pan-x pan-y; } }
+button { position: relative; transition: transform .5s var(--spring), background-color .18s, color .18s, border-color .18s, opacity .18s; }
+button:active { transform: scale(.93); transition: transform .07s ease-out, background-color .18s, color .18s, border-color .18s; }
+.read { transform-origin: 0 50%; }
+.read:active, .go:active, .saved-item .load:active, .setrow:active { transform: scale(.975); }
+.tried[aria-pressed="true"]:active { transform: scale(.93) rotate(-3deg); }
+button:disabled { opacity: .8; }
+.act.ok { background: var(--good); border-color: var(--good); color: var(--surface); }
+.go.done { animation: pulse 1.1s ease-in-out 3; }
+.tried.stamped { animation: stamp .45s cubic-bezier(.2, .9, .3, 1); }
+.saved-item.gone { opacity: 0; transform: translateX(-24px); transition: opacity .2s, transform .2s ease-in; }
+.fixout:not([hidden]) { animation: rise .3s var(--ease); }
+.ruler.drag { cursor: grabbing; scroll-snap-type: none; }
+@keyframes stamp { 0% { transform: scale(1.8) rotate(-14deg); opacity: 0; } 60% { transform: scale(.9) rotate(-3deg); opacity: 1; } 100% { transform: scale(1) rotate(-3deg); } }
+@keyframes pulse { 50% { transform: scale(1.025); } }
+@keyframes rise { from { opacity: 0; transform: translateY(6px); } }
+
+/* iPhone haptics: a real tap on a label wired to a native switch plays the system tick.
+   The label covers the button; the switch itself stays out from under the finger. */
+.hx { position: absolute; inset: 0; z-index: 2; margin: 0; border-radius: inherit; cursor: inherit; }
+.hx input { position: absolute; left: 0; top: 0; width: 1px; height: 1px; margin: 0; visibility: hidden; pointer-events: none; }
+
+/* settings switch */
+.setrow { width: 100%; text-align: left; }
+.tog { flex: 0 0 auto; width: 50px; height: 30px; border-radius: 999px; background: var(--line); position: relative; transition: background-color .2s; }
+.tog::after { content: ""; position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px #0000004d; transition: transform .45s var(--spring); }
+.setrow[aria-checked="true"] .tog { background: var(--good); }
+.setrow[aria-checked="true"] .tog::after { transform: translateX(20px); }
+
+/* tab change: the page slides the way you went, the bar stays put */
+.tabs { view-transition-name: tabs; }
+::view-transition-old(root) { animation: .14s ease-in both vt-out; }
+::view-transition-new(root) { animation: .3s var(--ease) both vt-in; }
+@keyframes vt-out { to { opacity: 0; transform: translateX(calc(var(--dir, 1) * -16px)); } }
+@keyframes vt-in { from { opacity: 0; transform: translateX(calc(var(--dir, 1) * 16px)); } }
+
+@media (hover: hover) {
+  .chip:hover, .q:hover, .nudge:hover, .stepper button:hover, .saved-item .load:hover, .del:hover { border-color: var(--muted); }
+  .act:hover, .q.gear:hover { background: var(--copper-soft); }
+  .act.ok:hover { background: var(--good); }
+  .tab:hover, .seg button:hover { color: var(--ink); }
+  .tab[aria-selected="true"]:hover { color: var(--copper); }
+  .seg button[aria-pressed="true"]:hover { color: var(--bg); }
+  .read:hover .k { color: var(--hero-ink); }
+  .go:hover { filter: brightness(1.07); }
+}
+
+/* ---------- 720px and up: bench beside guide ---------- */
+@media (min-width: 720px) {
+  body { padding-left: max(28px, env(safe-area-inset-left, 0px)); padding-right: max(28px, env(safe-area-inset-right, 0px)); padding-top: 22px; }
+  .app { max-width: 980px; }
+  #view-brew { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 18px 24px; align-items: start; }
+  .top, .rail { grid-column: 1 / -1; }
+  .rail { display: block; min-width: 0; }
+  .strip { margin-inline: 0; padding-inline: 0; flex-wrap: wrap; overflow: visible; }
+  .bench, .guide { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+  .hero { grid-template-columns: 120px 1fr; padding: 22px; gap: 22px; }
+  .glass { min-height: 220px; }
+  .read .v { font-size: 40px; }
+  .group { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 12px; }
+  .group > .label { grid-column: 1 / -1; }
+  #ways { gap: 26px; }
+  .cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 28px; align-items: start; }
+}
+
+/* ---------- 1100px and up: desktop workbench ---------- */
+@media (min-width: 1100px) {
+  body { padding-top: 96px; padding-bottom: 56px; }
+  .app { max-width: 1280px; }
+  .tabs {
+    top: 0; bottom: auto; pointer-events: auto; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
+    padding: calc(env(safe-area-inset-top, 0px) + 12px) max(28px, calc(50vw - 640px)) 12px;
+    border-bottom: 1px solid var(--line);
+    background: color-mix(in srgb, var(--bg) 84%, transparent);
+    -webkit-backdrop-filter: blur(20px) saturate(1.6); backdrop-filter: blur(20px) saturate(1.6);
+  }
+  .brand { display: block; font-family: var(--font-display); font-size: 22px; font-weight: 700; letter-spacing: -0.01em; }
+  .hint { display: block; justify-self: end; font-size: 13px; color: var(--muted); }
+  .tablist { width: 330px; box-shadow: none; }
+  .tab { min-height: 36px; padding-block: 6px; }
+  #view-brew { grid-template-columns: 216px minmax(0, 1fr) minmax(300px, 350px); gap: 18px 36px; }
+  #view-brew > .top { grid-column: 2; grid-row: 1; align-items: center; }
+  #view-brew > .top h1 { display: none; }
+  .mname { display: block; font-size: 34px; letter-spacing: -0.015em; }
+  .rail { grid-column: 1; grid-row: 1 / span 2; position: sticky; top: 96px; max-height: calc(100vh - 120px); overflow-y: auto; scrollbar-width: thin; padding: 2px; }
+  .bench { grid-column: 2; grid-row: 2; gap: 20px; }
+  .guide { grid-column: 3; grid-row: 1 / span 2; }
+  .strip { flex-direction: column; flex-wrap: nowrap; gap: 2px; }
+  .strip .grp { display: block; padding: 16px 12px 6px; }
+  .strip .grp:first-child { padding-top: 4px; }
+  .chip { border-color: transparent; background: transparent; border-radius: 10px; text-align: left; padding: 8px 12px; min-height: 38px; }
+  .chip[aria-pressed="true"] { border-color: var(--ink); }
+  .about { font-size: 16px; max-width: 60ch; }
+  .hero { grid-template-columns: clamp(120px, 12vw, 172px) 1fr; padding: 30px; gap: 32px; border-radius: 28px; }
+  .glass { min-height: 300px; border-width: 3px; border-radius: 6px 6px 24px 24px; }
+  .cap { font-size: 12.5px; top: 8px; }
+  .read { padding: 8px 0 12px; }
+  .read .v { font-size: clamp(42px, 4.4vw, 58px); }
+  .read .v small { font-size: 20px; }
+  .read .v em { font-size: 15px; }
+  .track { height: 66px; }
+  .setter { padding-top: 18px; gap: 14px; }
+  .setter-head, .quick { padding-inline: 20px; }
+  .wrapchips .chip { border-color: var(--line); background: var(--surface); border-radius: 999px; padding: 9px 15px; }
+  .wrapchips .chip[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); }
+  h1 { font-size: 34px; }
+  .group { grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .liquid, .grounds, .bar i { transition: none; }
+  button, .seg::before, .ind, .tog::after { transition-duration: .01s; }
+  .go.done, .tried.stamped, .fixout:not([hidden]) { animation: none; }
+}
 </style>
 
 <main class="app">
   <!-- BREW -->
   <section class="view" id="view-brew">
-    <div class="top"><h1>Brew Dose</h1><button class="act" id="saveBtn" type="button">Save</button></div>
-    <div class="strip" id="strip" role="group" aria-label="Brew method"></div>
+    <div class="top"><h1>Brew Dose</h1><h2 class="mname" id="mname"></h2><button class="act" id="saveBtn" type="button"><span class="t">Save</span></button></div>
+    <div class="rail" id="rail"><div class="strip" id="strip" role="group" aria-label="Brew method"></div></div>
+    <div class="bench">
     <p class="about" id="about"></p>
 
     <div class="hero">
@@ -273,10 +398,12 @@ h2 { font-family: var(--font-display); font-size: 22px; font-weight: 700; margin
       </div>
     </div>
 
+    </div>
+    <div class="guide">
     <div class="card">
       <span class="label">How to</span>
       <ol class="steps" id="steps"></ol>
-      <button class="go" id="go" type="button"></button>
+      <button class="go" id="go" type="button"><span class="t"></span></button>
       <div class="bar" id="bar"><i id="barfill"></i></div>
     </div>
 
@@ -294,6 +421,7 @@ h2 { font-family: var(--font-display); font-size: 22px; font-weight: 700; margin
       </div>
       <div class="fixout" id="fixout" hidden></div>
     </div>
+    </div>
   </section>
 
   <!-- EXPLORE -->
@@ -306,18 +434,26 @@ h2 { font-family: var(--font-display); font-size: 22px; font-weight: 700; margin
   <!-- SAVED -->
   <section class="view" id="view-saved" hidden>
     <h1>Saved</h1>
-    <div id="savedList" class="view"></div>
-    <h2>My gear</h2>
-    <p class="about">How much water each pot takes. On the Brew tab, tap a pot to fill it and get the coffee dose for your strength.</p>
-    <div id="gearList" class="view"></div>
+    <div class="cols">
+      <div class="view">
+        <div id="savedList" class="view"></div>
+      </div>
+      <div class="view">
+        <h2>My gear</h2>
+        <p class="about">How much water each pot takes. On the Brew tab, tap a pot to fill it and get the coffee dose for your strength.</p>
+        <div id="gearList" class="view"></div>
+        <h2>Feel</h2>
+        <button class="gear-row setrow" id="soundBtn" type="button" role="switch" aria-checked="true"><span class="who"><b>Scale ticks</b><span class="small muted">A soft click as the scale moves</span></span><i class="tog" aria-hidden="true"></i></button>
+      </div>
+    </div>
   </section>
 </main>
 
-<nav class="tabs" aria-label="Sections"><div role="tablist">
+<nav class="tabs" aria-label="Sections"><span class="brand">Brew Dose</span><div class="tablist" role="tablist"><i class="ind" aria-hidden="true"></i>
   <button class="tab" role="tab" data-tab="brew" aria-selected="true">Brew</button>
   <button class="tab" role="tab" data-tab="explore" aria-selected="false">Explore</button>
   <button class="tab" role="tab" data-tab="saved" aria-selected="false">Saved</button>
-</div></nav>
+</div><span class="hint">Drag the scale, or focus it and use ← →</span></nav>
 
 <script>
 (function () {
@@ -326,6 +462,20 @@ h2 { font-family: var(--font-display); font-size: 22px; font-weight: 700; margin
   function fmt(n, dp) { var p = Math.pow(10, dp); return String(Math.round(n * p) / p); }
   function $(id) { return document.getElementById(id); }
   function all(sel, fn) { Array.prototype.forEach.call(document.querySelectorAll(sel), fn); }
+  function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+  /* Buttons can carry a haptic label (see below), so their text lives in a span and is set through here. */
+  function setText(b, str) {
+    var t = b.querySelector('.t');
+    if (!t) {
+      Array.prototype.slice.call(b.childNodes).forEach(function (n) { if (n.nodeType === 3) b.removeChild(n); });
+      t = document.createElement('span'); t.className = 't'; b.insertBefore(t, b.firstChild);
+    }
+    t.textContent = str;
+  }
+  /* Run after the tap's own default action. Rebuilding or disabling the tapped button
+     inside its click handler would detach the haptic label before iOS plays the tick. */
+  function after(fn) { setTimeout(fn, 0); }
+  var STILL = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
 
   var MUG = ['mug', 'mugs'], CUP = ['cup', 'cups'], SMALL = ['small cup', 'small cups'], GLASS = ['glass', 'glasses'];
   var M = {
@@ -411,7 +561,7 @@ h2 { font-family: var(--font-display); font-size: 22px; font-weight: 700; margin
 
   /* ---------- state ---------- */
   var KEY = 'brewdose.v2';
-  var S = { method: 'press', per: {}, saved: [], tried: {}, gear: [
+  var S = { method: 'press', per: {}, saved: [], tried: {}, sound: true, gear: [
     { id: 1, name: 'Chambord', method: 'press', ml: 300 },
     { id: 2, name: 'Eileen', method: 'press', ml: 900 },
     { id: 3, name: 'Phin', method: 'phin', ml: 100 }
@@ -422,6 +572,7 @@ h2 { font-family: var(--font-display); font-size: 22px; font-weight: 700; margin
       if (M[raw.method]) S.method = raw.method;
       S.per = raw.per; S.saved = Array.isArray(raw.saved) ? raw.saved : []; S.tried = raw.tried || {};
       if (Array.isArray(raw.gear)) S.gear = raw.gear;
+      if (raw.sound === false) S.sound = false;
     }
   } catch (e) {}
   ORDER.forEach(function (k) {
@@ -440,8 +591,87 @@ h2 { font-family: var(--font-display); font-size: 22px; font-weight: 700; margin
   }
   function calc() { return calcFor(M[S.method], cur()); }
 
+  /* ---------- feel: haptics, sound, slosh ---------- */
+  /* iPhone: Safari has no vibration API. The one haptic a page can reach is the system tick of a
+     native switch, and since iOS 26.5 it plays only for the user's own tap, never for a scripted
+     click. So every button carries an invisible label wired to a hidden switch: the tap lands on
+     the label, toggles the switch, the phone ticks, and the click bubbles to the button as usual.
+     A drag cannot tick, so the ruler answers with sound and motion instead.
+     Android: navigator.vibrate, on taps and on every ruler step. */
+  var IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  var VIB = !IOS && typeof navigator.vibrate === 'function' && window.matchMedia && matchMedia('(pointer: coarse)').matches;
+  function buzz(ms) { if (VIB) { try { navigator.vibrate(ms); } catch (e) {} } }
+  function hx(root) {
+    if (!IOS) return;
+    var list = root.querySelectorAll ? root.querySelectorAll('button') : [];
+    Array.prototype.forEach.call(list, function (b) {
+      var last = b.lastElementChild;
+      if (last && last.className === 'hx') return;
+      var l = document.createElement('label'), i = document.createElement('input');
+      l.className = 'hx'; l.setAttribute('aria-hidden', 'true');
+      i.type = 'checkbox'; i.setAttribute('switch', ''); i.className = 'hxi';
+      l.appendChild(i); b.appendChild(l);
+    });
+  }
+  if (IOS) {
+    /* the label forwards its click to the switch; that second click must not reach the button again */
+    document.addEventListener('click', function (e) { if (e.target.className === 'hxi') e.stopPropagation(); }, true);
+    new MutationObserver(function (recs) {
+      recs.forEach(function (r) { Array.prototype.forEach.call(r.addedNodes, function (n) { if (n.nodeType === 1) { if (n.tagName === 'BUTTON') hx(n.parentNode); else hx(n); } }); });
+    }).observe(document.body, { childList: true, subtree: true });
+    document.addEventListener('touchstart', function () {}, { passive: true }); /* lets :active follow the finger */
+  }
+  if (VIB) document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('button')) buzz(8); }, true);
+
+  var audio = null, lastTick = 0;
+  function unlock(force) {
+    if (!force && !S.sound) return;
+    try {
+      if (!audio) {
+        audio = new (window.AudioContext || window.webkitAudioContext)();
+        /* mix with whatever is already playing instead of pausing it */
+        try { if (navigator.audioSession) navigator.audioSession.type = 'ambient'; } catch (e) {}
+      }
+      if (audio.state !== 'running') audio.resume();
+    } catch (e) {}
+  }
+  ['pointerdown', 'touchend', 'keydown'].forEach(function (ev) {
+    document.addEventListener(ev, function () { unlock(false); }, { passive: true, capture: true });
+  });
+  function tickSound(major) {
+    buzz(major ? 7 : 3);
+    if (!S.sound || !audio || audio.state !== 'running') return;
+    var now = audio.currentTime;
+    if (now - lastTick < 0.026) return;
+    lastTick = now;
+    try {
+      var o = audio.createOscillator(), g = audio.createGain();
+      o.type = 'triangle';
+      o.frequency.setValueAtTime(major ? 1500 : 2300, now);
+      o.frequency.exponentialRampToValueAtTime(major ? 700 : 1100, now + 0.03);
+      g.gain.setValueAtTime(major ? 0.13 : 0.06, now);
+      g.gain.exponentialRampToValueAtTime(0.0001, now + 0.035);
+      o.connect(g); g.connect(audio.destination); o.start(now); o.stop(now + 0.04);
+    } catch (e) {}
+  }
+
+  /* the coffee in the glass sloshes: a damped spring on the tilt of its surface */
+  var glass = document.querySelector('.glass'), tilt = 0, tv = 0, traf = 0, tlast = 0;
+  function kick(v) {
+    if (STILL) return;
+    tv = clamp(tv + v, -70, 70);
+    if (!traf) { tlast = performance.now(); traf = requestAnimationFrame(sway); }
+  }
+  function sway(now) {
+    var dt = Math.min(0.032, (now - tlast) / 1000); tlast = now;
+    tv += (-150 * tilt - 8 * tv) * dt; tilt = clamp(tilt + tv * dt, -9, 9);
+    if (Math.abs(tilt) < 0.04 && Math.abs(tv) < 0.4) { tilt = tv = 0; traf = 0; glass.style.setProperty('--tilt', '0deg'); return; }
+    glass.style.setProperty('--tilt', tilt.toFixed(2) + 'deg');
+    traf = requestAnimationFrame(sway);
+  }
+
   /* ---------- ruler ---------- */
-  var ruler = $('ruler'), track = $('track'), userScroll = false, rulerFor = '';
+  var ruler = $('ruler'), track = $('track'), userScroll = false, rulerFor = '', lastIdx = -1;
   ['touchstart', 'pointerdown', 'wheel'].forEach(function (ev) {
     ruler.addEventListener(ev, function () { userScroll = true; }, { passive: true });
   });
@@ -459,33 +689,71 @@ h2 { font-family: var(--font-display); font-size: 22px; font-weight: 700; margin
     track.innerHTML = html;
     rulerFor = S.method + cur().driver;
   }
-  function setRuler() {
-    if (rulerFor !== S.method + cur().driver) buildRuler();
+  function setRuler(glide) {
+    var fresh = rulerFor !== S.method + cur().driver;
+    if (fresh) buildRuler();
     var d = drv(), x = Math.round(Math.min(d.max, cur().amount) / d.step * TICK);
-    userScroll = false; ruler.scrollLeft = x;
+    userScroll = false;
+    if (glide && !fresh && !STILL && Math.abs(ruler.scrollLeft - x) > 1) ruler.scrollTo({ left: x, behavior: 'smooth' });
+    else { lastIdx = Math.round(x / TICK); ruler.scrollLeft = x; }
   }
   ruler.addEventListener('scroll', function () {
+    var idx = Math.round(ruler.scrollLeft / TICK);
+    if (idx !== lastIdx) {
+      /* every tick that passes the needle clicks and nudges the coffee, also when the scale glides on its own */
+      if (lastIdx >= 0) { tickSound(idx % 5 === 0); kick(idx > lastIdx ? 9 : -9); }
+      lastIdx = idx;
+    }
     if (!userScroll) return;
-    var d = drv(), v = Math.round(ruler.scrollLeft / TICK) * d.step;
-    v = Math.max(0, Math.min(d.max, v));
+    var d = drv(), v = clamp(idx * d.step, 0, d.max);
     if (v === cur().amount) return;
     cur().amount = v; save(); render('ruler');
   }, { passive: true });
   ruler.addEventListener('keydown', function (e) {
-    var d = drv(), dir = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
-    if (!dir) return;
+    var d = drv(), now = Math.round(cur().amount / d.step) * d.step, k = e.key;
+    var to = k === 'ArrowRight' ? now + d.step : k === 'ArrowLeft' ? now - d.step
+      : k === 'PageUp' ? now + 10 * d.step : k === 'PageDown' ? now - 10 * d.step
+      : k === 'Home' ? 0 : k === 'End' ? d.max : null;
+    if (to === null) return;
     e.preventDefault();
-    cur().amount = Math.max(0, Math.min(d.max, Math.round(cur().amount / d.step) * d.step + dir * d.step));
-    save(); render();
+    cur().amount = clamp(to, 0, d.max);
+    save(); render('step');
   });
+  /* mouse: grab the scale and drag it */
+  (function () {
+    var down = false, x0 = 0, left0 = 0;
+    ruler.addEventListener('pointerdown', function (e) {
+      if (e.pointerType !== 'mouse' || e.button !== 0) return;
+      down = true; x0 = e.clientX; left0 = ruler.scrollLeft;
+      ruler.classList.add('drag');
+      try { ruler.setPointerCapture(e.pointerId); } catch (err) {}
+    });
+    ruler.addEventListener('pointermove', function (e) { if (down) ruler.scrollLeft = left0 - (e.clientX - x0); });
+    function up() {
+      if (!down) return;
+      down = false; ruler.classList.remove('drag');
+      ruler.scrollTo({ left: Math.round(ruler.scrollLeft / TICK) * TICK, behavior: STILL ? 'auto' : 'smooth' });
+    }
+    ruler.addEventListener('pointerup', up); ruler.addEventListener('pointercancel', up);
+  })();
 
   function nudge(dir) {
     var d = drv();
-    cur().amount = Math.max(0, Math.min(d.max, Math.round(cur().amount / d.step) * d.step + dir * d.step));
-    save(); render();
+    cur().amount = clamp(Math.round(cur().amount / d.step) * d.step + dir * d.step, 0, d.max);
+    save(); render('step');
   }
-  $('less').addEventListener('click', function () { nudge(-1); });
-  $('more').addEventListener('click', function () { nudge(1); });
+  /* tap for one step, hold to run */
+  function holdable(btn, dir) {
+    var wait = 0, run = 0, held = false;
+    function stop() { clearTimeout(wait); clearInterval(run); wait = run = 0; }
+    btn.addEventListener('pointerdown', function () {
+      stop(); held = false;
+      wait = setTimeout(function () { held = true; run = setInterval(function () { nudge(dir); }, 75); }, 380);
+    });
+    ['pointerup', 'pointercancel', 'pointerleave'].forEach(function (ev) { btn.addEventListener(ev, stop); });
+    btn.addEventListener('click', function () { if (held) { held = false; return; } nudge(dir); });
+  }
+  holdable($('less'), -1); holdable($('more'), 1);
 
   /* ---------- render ---------- */
   var typed = $('typed');
@@ -493,10 +761,9 @@ h2 { font-family: var(--font-display); font-size: 22px; font-weight: 700; margin
     var m = M[S.method], p = cur(), a = calc(), d = drv();
     all('#strip .chip', function (b) { b.setAttribute('aria-pressed', String(b.dataset.method === S.method)); });
     $('about').innerHTML = '<b>' + m.place + '.</b> ' + m.blurb;
+    $('mname').textContent = m.name;
 
-    $('r-coffee').innerHTML = fmt(a.c, 1) + '<small>g</small>';
-    $('r-water').innerHTML = fmt(a.w, 0) + '<small>ml</small>';
-    $('r-cups').innerHTML = fmt(a.cups, 1) + '<small>' + (Math.round(a.cups * 10) === 10 ? m.unit[0] : m.unit[1]) + '</small><em>' + fmt(a.out, 0) + ' ml in the cup</em>';
+    heroTo(a, src === 'ruler' || src === 'step' || src === 'type');
     all('.read', function (b) { b.setAttribute('aria-pressed', String(b.dataset.driver === p.driver)); });
 
     var capml = [100, 250, 500, 1000, 1500, 2000, 3000].filter(function (v) { return v >= a.w; })[0] || Math.ceil(a.w / 1000) * 1000;
@@ -505,7 +772,7 @@ h2 { font-family: var(--font-display); font-size: 22px; font-weight: 700; margin
     var liquid = $('liquid');
     liquid.parentNode.style.setProperty('--brew-light', m.tint ? m.tint[0] : '');
     liquid.parentNode.style.setProperty('--brew-dark', m.tint ? m.tint[1] : '');
-    liquid.style.height = Math.min(92, a.w / capml * 92) + '%';
+    liquid.style.height = 'calc(' + Math.min(92, a.w / capml * 92) + '% + 24px)';
     liquid.style.backgroundColor = 'color-mix(in srgb, var(--brew-dark) ' + t + '%, var(--brew-light))';
     $('grounds').style.height = Math.min(60, a.c * 2.4 / capml * 92) + '%';
 
@@ -518,8 +785,8 @@ h2 { font-family: var(--font-display); font-size: 22px; font-weight: 700; margin
     ruler.setAttribute('aria-valuenow', p.amount);
     ruler.setAttribute('aria-valuetext', fmt(p.amount, d.dp) + ' ' + d.unit);
     ruler.setAttribute('aria-label', $('setLabel').textContent);
-    if (src !== 'ruler') setRuler();
-    if (src === 'full') {
+    if (src !== 'ruler') setRuler(src !== 'init' && src !== 'type');
+    if (src === 'full' || src === 'init') {
       var qs = p.driver === 'coffee' ? (m.cchips || (m.def <= 9 ? [10, 16, 20, 30] : [15, 20, 30, 45, 60]))
         : p.driver === 'water' ? (m.serve <= 100 ? [1, 2, 3, 4, 6].map(function (n) { return n * m.serve; }) : [250, 350, 500, 750, 1000])
         : [1, 2, 3, 4, 6];
@@ -529,7 +796,12 @@ h2 { font-family: var(--font-display); font-size: 22px; font-weight: 700; margin
     }
 
     $('ratio').textContent = '1:' + fmt(p.ratio, 1);
-    all('#seg button', function (b) { b.setAttribute('aria-pressed', String(m[b.dataset.preset] === p.ratio)); });
+    all('#seg button', function (b, i) {
+      var on = m[b.dataset.preset] === p.ratio;
+      b.setAttribute('aria-pressed', String(on));
+      if (on) $('seg').style.setProperty('--i', i);
+    });
+    $('seg').style.setProperty('--on', document.querySelector('#seg [aria-pressed="true"]') ? 1 : 0);
 
     var rows = [['Grind', m.grind], ['Water', m.temp]];
     if (m.extra) rows.push(['Add', m.extra(a)]);
@@ -538,22 +810,56 @@ h2 { font-family: var(--font-display); font-size: 22px; font-weight: 700; margin
     rows.push(['Per litre', fmt(1000 / p.ratio, 0) + ' g of ' + stuff]);
     $('facts').innerHTML = rows.map(function (r) { return '<dt>' + r[0] + '</dt><dd>' + r[1] + '</dd>'; }).join('');
   }
-  function renderMethod() {
+  var shown = null, tw = 0;
+  function paint(a) {
+    var m = M[S.method];
+    $('r-coffee').innerHTML = fmt(a.c, 1) + '<small>g</small>';
+    $('r-water').innerHTML = fmt(a.w, 0) + '<small>ml</small>';
+    $('r-cups').innerHTML = fmt(a.cups, 1) + '<small>' + (Math.round(a.cups * 10) === 10 ? m.unit[0] : m.unit[1]) + '</small><em>' + fmt(a.out, 0) + ' ml in the cup</em>';
+  }
+  /* Jumps (a chip, a preset, another method) count up or down to the new numbers; fine steps land at once. */
+  function heroTo(a, instant) {
+    cancelAnimationFrame(tw);
+    if (instant || !shown || STILL) { shown = a; paint(a); return; }
+    var from = shown, t0 = performance.now();
+    function step(now) {
+      var k = clamp((now - t0) / 360, 0, 1), e = 1 - Math.pow(1 - k, 3);
+      shown = { c: from.c + (a.c - from.c) * e, w: from.w + (a.w - from.w) * e, out: from.out + (a.out - from.out) * e, cups: from.cups + (a.cups - from.cups) * e };
+      paint(shown);
+      if (k < 1) tw = requestAnimationFrame(step); else shown = a;
+    }
+    tw = requestAnimationFrame(step);
+  }
+  function renderMethod(first) {
     var m = M[S.method];
     $('steps').innerHTML = m.steps.map(function (s) { return '<li>' + s + '</li>'; }).join('');
     stopTimer();
     $('fixout').hidden = true;
     all('#fix .chip', function (b) { b.setAttribute('aria-pressed', 'false'); });
-    render('full');
+    render(first ? 'init' : 'full');
     var active = document.querySelector('#strip .chip[aria-pressed="true"]');
-    if (active) { var s = $('strip'); s.scrollLeft = active.offsetLeft - s.offsetLeft - 16; }
+    if (!active) return;
+    var strip = $('strip'), rail = $('rail'), ar = active.getBoundingClientRect(), mode = first || STILL ? 'auto' : 'smooth';
+    if (strip.scrollWidth > strip.clientWidth) {
+      var sr = strip.getBoundingClientRect();
+      strip.scrollTo({ left: strip.scrollLeft + ar.left - sr.left - (sr.width - ar.width) / 2, behavior: mode });
+    } else if (rail.scrollHeight > rail.clientHeight) {
+      var rr = rail.getBoundingClientRect();
+      if (ar.top < rr.top || ar.bottom > rr.bottom) rail.scrollTo({ top: rail.scrollTop + ar.top - rr.top - (rr.height - ar.height) / 2, behavior: mode });
+    }
   }
 
   /* ---------- inputs ---------- */
-  $('strip').innerHTML = ORDER.map(function (k) { return '<button class="chip" type="button" data-method="' + k + '">' + M[k].name + '</button>'; }).join('');
+  var lastGroup = '';
+  $('strip').innerHTML = ORDER.map(function (k) {
+    var g = M[k].group, head = g === lastGroup ? '' : '<span class="grp label">' + g + '</span>';
+    lastGroup = g;
+    return head + '<button class="chip" type="button" data-method="' + k + '">' + M[k].name + '</button>';
+  }).join('');
   $('strip').addEventListener('click', function (e) {
     var b = e.target.closest('.chip'); if (!b) return;
-    S.method = b.dataset.method; save(); renderMethod();
+    if (b.dataset.method === S.method) return;
+    S.method = b.dataset.method; save(); kick(30); renderMethod();
   });
   all('.read', function (b) {
     b.addEventListener('click', function () {
@@ -566,18 +872,19 @@ h2 { font-family: var(--font-display); font-size: 22px; font-weight: 700; margin
   typed.addEventListener('input', function () {
     var n = parseFloat(typed.value.replace(',', '.'));
     if (!isFinite(n) || n < 0) return;
-    cur().amount = n; save(); render();
+    cur().amount = n; save(); render('type');
   });
   typed.addEventListener('focus', function () { typed.select(); });
   typed.addEventListener('blur', function () { render(); });
   typed.addEventListener('keydown', function (e) { if (e.key === 'Enter') typed.blur(); });
   $('quick').addEventListener('click', function (e) {
     var b = e.target.closest('.q'); if (!b) return;
-    if (b.dataset.gear) { cur().driver = 'water'; cur().amount = Number(b.dataset.gear); save(); render('full'); return; }
-    cur().amount = Number(b.dataset.v); save(); render();
+    if (b.dataset.gear) { var ml = Number(b.dataset.gear); after(function () { cur().driver = 'water'; cur().amount = ml; save(); kick(40); render('full'); }); return; }
+    var v = Number(b.dataset.v);
+    kick(v > cur().amount ? 40 : -40); cur().amount = v; save(); render();
   });
   function setRatio(r) {
-    var m = M[S.method]; cur().ratio = Math.max(m.min, Math.min(m.max, r)); save(); render();
+    var m = M[S.method]; cur().ratio = Math.max(m.min, Math.min(m.max, r)); save(); kick(18); render();
   }
   $('weaker').addEventListener('click', function () { setRatio(cur().ratio + 0.5); });
   $('stronger').addEventListener('click', function () { setRatio(cur().ratio - 0.5); });
@@ -586,13 +893,13 @@ h2 { font-family: var(--font-display); font-size: 22px; font-weight: 700; margin
   });
 
   /* ---------- timer ---------- */
-  var go = $('go'), tick = null, endAt = 0, total = 0, audio = null, lock = null;
+  var go = $('go'), tick = null, endAt = 0, total = 0, lock = null;
   function mmss(s) { s = Math.max(0, Math.ceil(s)); return Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2); }
   function idleLabel() {
     var m = M[S.method];
     go.className = 'go'; $('barfill').style.width = '0';
-    if (m.timer) { go.hidden = false; $('bar').hidden = false; go.textContent = 'Start ' + mmss(m.timer[0]) + ' ' + m.timer[1]; }
-    else if (m.ready) { go.hidden = false; $('bar').hidden = true; go.textContent = 'When is it ready?'; }
+    if (m.timer) { go.hidden = false; $('bar').hidden = false; setText(go, 'Start ' + mmss(m.timer[0]) + ' ' + m.timer[1]); }
+    else if (m.ready) { go.hidden = false; $('bar').hidden = true; setText(go, 'When is it ready?'); }
     else { go.hidden = true; $('bar').hidden = true; }
   }
   function stopTimer() {
@@ -617,12 +924,12 @@ h2 { font-family: var(--font-display); font-size: 22px; font-weight: 700; margin
     var left = (endAt - Date.now()) / 1000;
     if (left <= 0) {
       clearInterval(tick); tick = null;
-      go.className = 'go done'; go.textContent = 'Done. Tap to reset'; $('barfill').style.width = '100%';
+      go.className = 'go done'; setText(go, 'Done. Tap to reset'); $('barfill').style.width = '100%';
       beep();
       if (lock) { try { lock.release(); } catch (e) {} lock = null; }
       return;
     }
-    go.textContent = mmss(left);
+    setText(go, mmss(left));
     $('barfill').style.width = ((1 - left / total) * 100) + '%';
   }
   go.addEventListener('click', function () {
@@ -631,11 +938,11 @@ h2 { font-family: var(--font-display); font-size: 22px; font-weight: 700; margin
     if (m.ready) {
       var d = new Date(Date.now() + m.ready * 3600000), now = new Date();
       var day = d.getDate() === now.getDate() ? 'today' : 'tomorrow';
-      go.textContent = 'Start now, strain ' + day + ' around ' + ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2);
+      setText(go, 'Start now, strain ' + day + ' around ' + ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2));
       return;
     }
     if (!m.timer) return;
-    try { audio = audio || new (window.AudioContext || window.webkitAudioContext)(); audio.resume(); } catch (e) {}
+    unlock(true);
     try { if (navigator.wakeLock) navigator.wakeLock.request('screen').then(function (l) { lock = l; }).catch(function () {}); } catch (e) {}
     total = m.timer[0]; endAt = Date.now() + total * 1000;
     go.className = 'go running'; frame(); tick = setInterval(frame, 250);
@@ -664,7 +971,7 @@ h2 { font-family: var(--font-display); font-size: 22px; font-weight: 700; margin
   });
   $('fixout').addEventListener('click', function (e) {
     var b = e.target.closest('.act'); if (!b) return;
-    if (b.dataset.act === 'ratio') { setRatio(Number(b.dataset.r)); b.textContent = 'Set'; b.disabled = true; }
+    if (b.dataset.act === 'ratio') { setRatio(Number(b.dataset.r)); setText(b, 'Set ✓'); b.classList.add('ok'); after(function () { b.disabled = true; }); }
     else saveRecipe(b);
   });
 
@@ -673,8 +980,9 @@ h2 { font-family: var(--font-display); font-size: 22px; font-weight: 700; margin
     var p = cur();
     S.saved.unshift({ id: Date.now(), method: S.method, ratio: p.ratio, driver: p.driver, amount: p.amount });
     save(); renderSaved();
-    var old = btn.textContent; btn.textContent = 'Saved'; btn.disabled = true;
-    setTimeout(function () { btn.textContent = old; btn.disabled = false; }, 1400);
+    var old = btn.textContent; setText(btn, 'Saved ✓'); btn.classList.add('ok');
+    after(function () { btn.disabled = true; });
+    setTimeout(function () { setText(btn, old); btn.classList.remove('ok'); btn.disabled = false; }, 1400);
   }
   $('saveBtn').addEventListener('click', function () { saveRecipe($('saveBtn')); });
   function renderSaved() {
@@ -695,8 +1003,10 @@ h2 { font-family: var(--font-display); font-size: 22px; font-weight: 700; margin
       S.method = r.method; S.per[r.method] = { ratio: r.ratio, driver: r.driver, amount: r.amount };
       save(); renderMethod(); show('brew');
     } else if (d) {
-      if (d.dataset.sure) { S.saved = S.saved.filter(function (x) { return String(x.id) !== d.dataset.del; }); save(); renderSaved(); }
-      else { d.dataset.sure = '1'; d.textContent = 'Sure?'; }
+      if (d.dataset.sure) {
+        d.parentNode.classList.add('gone');
+        setTimeout(function () { S.saved = S.saved.filter(function (x) { return String(x.id) !== d.dataset.del; }); save(); renderSaved(); }, STILL ? 0 : 200);
+      } else { d.dataset.sure = '1'; setText(d, 'Sure?'); }
     }
   });
 
@@ -721,19 +1031,23 @@ h2 { font-family: var(--font-display); font-size: 22px; font-weight: 700; margin
   });
   $('gearList').addEventListener('click', function (e) {
     var d = e.target.closest('[data-gdel]');
-    if (d) { S.gear = S.gear.filter(function (g) { return String(g.id) !== d.dataset.gdel; }); save(); renderGear(); return; }
-    if (e.target.id === 'gearAdd') {
+    if (d) { after(function () { S.gear = S.gear.filter(function (g) { return String(g.id) !== d.dataset.gdel; }); save(); renderGear(); }); return; }
+    if (e.target.closest('#gearAdd')) {
       var name = $('gearName').value.trim(), ml = parseFloat($('gearMl').value.replace(',', '.'));
       if (!name || !isFinite(ml) || ml <= 0) { $('gearName').focus(); return; }
-      S.gear.push({ id: Date.now(), name: name, method: S.method, ml: ml }); save(); renderGear();
+      after(function () { S.gear.push({ id: Date.now(), name: name, method: S.method, ml: ml }); save(); renderGear(); });
     }
   });
 
   /* ---------- explore ---------- */
-  function renderExplore() {
-    var groups = {}, n = 0;
-    ORDER.forEach(function (k) { (groups[M[k].group] = groups[M[k].group] || []).push(k); if (S.tried[k]) n++; });
+  function passport() {
+    var n = ORDER.filter(function (k) { return S.tried[k]; }).length;
     $('passport').innerHTML = '<b>' + n + ' of ' + ORDER.length + ' tried.</b> Tap Tried to stamp the ones you have made.';
+  }
+  function renderExplore() {
+    var groups = {};
+    ORDER.forEach(function (k) { (groups[M[k].group] = groups[M[k].group] || []).push(k); });
+    passport();
     $('ways').innerHTML = Object.keys(groups).map(function (g) {
       return '<div class="group"><span class="label">' + g + '</span>' + groups[g].map(function (k) {
         var m = M[k];
@@ -747,7 +1061,11 @@ h2 { font-family: var(--font-display); font-size: 22px; font-weight: 700; margin
   $('ways').addEventListener('click', function (e) {
     var b = e.target.closest('[data-brew]'), t = e.target.closest('[data-tried]');
     if (b) { S.method = b.dataset.brew; save(); renderMethod(); show('brew'); }
-    else if (t) { S.tried[t.dataset.tried] = !S.tried[t.dataset.tried]; save(); renderExplore(); }
+    else if (t) {
+      var on = S.tried[t.dataset.tried] = !S.tried[t.dataset.tried]; save(); passport();
+      t.setAttribute('aria-pressed', String(on)); setText(t, on ? 'Tried ✓' : 'Tried?');
+      t.classList.remove('stamped'); if (on) { void t.offsetWidth; t.classList.add('stamped'); }
+    }
   });
   $('surprise').addEventListener('click', function () {
     var pool = ORDER.filter(function (k) { return !S.tried[k] && k !== S.method; });
@@ -756,25 +1074,43 @@ h2 { font-family: var(--font-display); font-size: 22px; font-weight: 700; margin
   });
 
   /* ---------- tabs ---------- */
+  var TABS = ['brew', 'explore', 'saved'], tabNow = 'brew';
   function show(tab) {
-    var still = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (document.startViewTransition && !still) document.startViewTransition(function () { swap(tab); });
+    if (tab === tabNow) { window.scrollTo({ top: 0, behavior: STILL ? 'auto' : 'smooth' }); return; }
+    document.documentElement.style.setProperty('--dir', TABS.indexOf(tab) > TABS.indexOf(tabNow) ? 1 : -1);
+    tabNow = tab;
+    document.querySelector('.tablist').style.setProperty('--i', TABS.indexOf(tab));
+    all('.tab', function (b) { b.setAttribute('aria-selected', String(b.dataset.tab === tab)); });
+    if (document.startViewTransition && !STILL) document.startViewTransition(function () { swap(tab); });
     else swap(tab);
   }
   function swap(tab) {
-    ['brew', 'explore', 'saved'].forEach(function (t) { $('view-' + t).hidden = t !== tab; });
-    all('.tab', function (b) { b.setAttribute('aria-selected', String(b.dataset.tab === tab)); });
+    TABS.forEach(function (t) { $('view-' + t).hidden = t !== tab; });
     window.scrollTo(0, 0);
     if (tab === 'brew') render('full');
     if (tab === 'saved') renderGear();
   }
   all('.tab', function (b) { b.addEventListener('click', function () { show(b.dataset.tab); }); });
 
-  renderMethod(); renderExplore(); renderSaved();
-  window.addEventListener('load', setRuler);
+  var soundBtn = $('soundBtn');
+  function paintSound() { soundBtn.setAttribute('aria-checked', String(S.sound)); }
+  soundBtn.addEventListener('click', function () { S.sound = !S.sound; save(); paintSound(); if (S.sound) { unlock(true); tickSound(true); } });
+  paintSound();
+
+  renderMethod(true); renderExplore(); renderSaved(); hx(document);
+  window.addEventListener('load', function () { setRuler(false); });
 
   if (document.querySelector('link[rel="manifest"]') && 'serviceWorker' in navigator) {
-    try { navigator.serviceWorker.register('sw.js').catch(function () {}); } catch (e) {}
+    try {
+      /* A new version takes over on its own: reload once when the new worker claims the page,
+         unless a timer is running. */
+      var had = !!navigator.serviceWorker.controller, swapped = false;
+      navigator.serviceWorker.addEventListener('controllerchange', function () {
+        if (!had || swapped || tick) return;
+        swapped = true; location.reload();
+      });
+      navigator.serviceWorker.register('sw.js').catch(function () {});
+    } catch (e) {}
   }
 })();
 </script>
