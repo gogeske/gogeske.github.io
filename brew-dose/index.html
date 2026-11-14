@@ -33,9 +33,10 @@
   --hero-accent: #ffc08c;
   --hero-line: #3f5cab;
   --hero-speck: #2a4a97;
-  --brew-light: #b98349;
-  --brew-dark: #2b1608;
-  --grounds: #1c0e05;
+  --brew-light: #9a5c2a;
+  --brew-dark: #241208;
+  --grounds: #0d0603;
+  --crema: #dcc097;
   --good: #1f7a4d;
   --shadow: #101c3026;
   --font-display: ui-serif, "New York", "Iowan Old Style", Georgia, serif;
@@ -48,7 +49,7 @@
     --copper: #e79a5e; --copper-soft: #3a2416; --on-copper: #0a111d;
     --hero: #142a5e; --hero-ink: #ffffff; --hero-muted: #a9b9de; --hero-accent: #ffc08c;
     --hero-line: #34509a; --hero-speck: #1d3878;
-    --brew-light: #c48a52; --brew-dark: #3a1f0e; --grounds: #1a0d05; --good: #5fd39a; --shadow: #00000080;
+    --brew-light: #9a5c2a; --brew-dark: #241208; --grounds: #0d0603; --crema: #dcc097; --good: #5fd39a; --shadow: #00000080;
     color-scheme: dark;
   }
 }
@@ -57,7 +58,7 @@
   --copper: #e79a5e; --copper-soft: #3a2416; --on-copper: #0a111d;
   --hero: #142a5e; --hero-ink: #ffffff; --hero-muted: #a9b9de; --hero-accent: #ffc08c;
   --hero-line: #34509a; --hero-speck: #1d3878;
-  --brew-light: #c48a52; --brew-dark: #3a1f0e; --grounds: #1a0d05; --good: #5fd39a; --shadow: #00000080;
+  --brew-light: #9a5c2a; --brew-dark: #241208; --grounds: #0d0603; --crema: #dcc097; --good: #5fd39a; --shadow: #00000080;
   color-scheme: dark;
 }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -104,6 +105,8 @@ h2 { font-family: var(--font-display); font-size: 22px; font-weight: 700; margin
 }
 .liquid { position: absolute; left: 0; right: 0; bottom: 0; height: 0; background: var(--brew-light); transition: height .35s ease, background-color .35s ease; }
 .grounds { position: absolute; left: 0; right: 0; bottom: 0; height: 0; background: var(--grounds); transition: height .35s ease; }
+.liquid::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 5px; background: var(--crema); }
+.read .v em { display: block; font-style: normal; font-family: var(--font-ui); font-size: 13px; font-weight: 600; color: var(--hero-muted); line-height: 1.3; }
 .cap { position: absolute; top: 6px; left: 0; right: 0; text-align: center; font-size: 11px; color: var(--hero-muted); font-variant-numeric: tabular-nums; }
 .reads { display: flex; flex-direction: column; justify-content: space-between; gap: 4px; min-width: 0; }
 .read {
@@ -214,7 +217,7 @@ h2 { font-family: var(--font-display); font-size: 22px; font-weight: 700; margin
   pointer-events: auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; width: 100%; max-width: 340px; padding: 5px;
   border: 1px solid var(--line); border-radius: 999px; box-shadow: 0 8px 28px var(--shadow);
   background: var(--surface);
-  background: color-mix(in srgb, var(--surface) 72%, transparent);
+  background: color-mix(in srgb, var(--surface) 90%, transparent);
   -webkit-backdrop-filter: blur(20px) saturate(1.7); backdrop-filter: blur(20px) saturate(1.7);
 }
 .tab { border: 0; background: transparent; border-radius: 999px; padding: 8px 4px; font-size: 15px; color: var(--muted); }
@@ -392,7 +395,7 @@ h2 { font-family: var(--font-display); font-size: 22px; font-weight: 700; margin
       steps: ['Coffee in the top chamber, press the disc on', 'Pour the water, lid on', 'Let it drip about 10 minutes', 'Mix with hot milk and pour between tumbler and bowl for froth'], timer: [600, 'drip'],
       extra: function (a) { return 'Hot milk, about ' + fmt(a.out * 1.2, 0) + ' ml (60 ml per 50 ml of decoction)'; } },
 
-    thai: { name: 'Thai iced tea', group: 'Not coffee', place: 'Thailand', stuff: 'tea', blurb: 'Cha yen. The orange tea mix brewed strong and sweet, poured over a glass packed with ice, finished with two kinds of milk.',
+    thai: { name: 'Thai iced tea', group: 'Not coffee', place: 'Thailand', stuff: 'tea', tint: ['#ee9a3e', '#b9521a'], blurb: 'Cha yen. The orange tea mix brewed strong and sweet, poured over a glass packed with ice, finished with two kinds of milk.',
       def: 16, mild: 19, strong: 13, min: 10, max: 22, keep: 3, serve: 180, unit: GLASS, start: 30, src: 0,
       grind: 'Thai tea mix, loose', temp: 'Just off the boil',
       steps: ['Steep the tea 5 minutes, strain through cloth or a fine sieve', 'Stir in the sugar and a pinch of salt while hot, let it cool', 'Pack a glass with ice, pour in the tea, top with the milks'], timer: [300, 'steep'],
@@ -493,20 +496,22 @@ h2 { font-family: var(--font-display); font-size: 22px; font-weight: 700; margin
 
     $('r-coffee').innerHTML = fmt(a.c, 1) + '<small>g</small>';
     $('r-water').innerHTML = fmt(a.w, 0) + '<small>ml</small>';
-    $('r-cups').innerHTML = fmt(a.cups, 1) + '<small>' + (Math.round(a.cups * 10) === 10 ? m.unit[0] : m.unit[1]) + ' · ' + fmt(a.out, 0) + ' ml</small>';
+    $('r-cups').innerHTML = fmt(a.cups, 1) + '<small>' + (Math.round(a.cups * 10) === 10 ? m.unit[0] : m.unit[1]) + '</small><em>' + fmt(a.out, 0) + ' ml in the cup</em>';
     all('.read', function (b) { b.setAttribute('aria-pressed', String(b.dataset.driver === p.driver)); });
 
     var capml = [100, 250, 500, 1000, 1500, 2000, 3000].filter(function (v) { return v >= a.w; })[0] || Math.ceil(a.w / 1000) * 1000;
     $('cap').textContent = capml >= 1000 ? fmt(capml / 1000, 1) + ' L' : capml + ' ml';
     var t = Math.round((m.max - p.ratio) / (m.max - m.min) * 100);
     var liquid = $('liquid');
+    liquid.parentNode.style.setProperty('--brew-light', m.tint ? m.tint[0] : '');
+    liquid.parentNode.style.setProperty('--brew-dark', m.tint ? m.tint[1] : '');
     liquid.style.height = Math.min(92, a.w / capml * 92) + '%';
     liquid.style.backgroundColor = 'color-mix(in srgb, var(--brew-dark) ' + t + '%, var(--brew-light))';
     $('grounds').style.height = Math.min(60, a.c * 2.4 / capml * 92) + '%';
 
     var stuff = m.stuff || 'coffee';
     $('k-coffee').textContent = stuff;
-    $('setLabel').textContent = 'Set ' + (p.driver === 'cups' ? 'how many ' + m.unit[1] : p.driver === 'coffee' ? stuff : 'water');
+    $('setLabel').textContent = 'Set ' + (p.driver === 'cups' ? m.unit[1] : p.driver === 'coffee' ? stuff : 'water');
     $('setUnit').textContent = p.driver === 'cups' ? '' : d.unit;
     if (document.activeElement !== typed) typed.value = fmt(p.amount, d.dp);
     ruler.setAttribute('aria-valuemax', d.max);
