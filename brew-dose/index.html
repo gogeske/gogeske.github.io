@@ -551,6 +551,7 @@ button:disabled { opacity: .8; }
       steps: ['Steep the tea 5 minutes, strain through cloth or a fine sieve', 'Stir in the sugar and a pinch of salt while hot, let it cool', 'Pack a glass with ice, pour in the tea, top with the milks'], timer: [300, 'steep'],
       extra: function (a) { var g = Math.max(1, Math.round(a.cups)); return 'Sugar about ' + fmt(a.w * 0.053, 0) + ' g. Per glass: 1½ tbsp condensed milk and 2 to 3 tbsp evaporated milk, so ' + fmt(g * 1.5, 1) + ' and ' + (g * 2) + ' to ' + (g * 3) + ' tbsp in total'; } }
   };
+  /* siri.json holds each method's def ratio for the Siri Shortcut. Change a def here, change it there. */
   var ORDER = Object.keys(M);
   var DR = {
     coffee: { label: 'Coffee', unit: 'g', max: 150, step: 1, dp: 1 },
@@ -579,6 +580,20 @@ button:disabled { opacity: .8; }
     var m = M[k], p = S.per[k];
     if (!p || !(p.ratio >= m.min && p.ratio <= m.max) || !(p.amount >= 0) || !DR[p.driver]) S.per[k] = { ratio: m.def, driver: 'coffee', amount: m.start };
   });
+  /* Deep link: ?method=press&coffee=30 or &water=500 (optionally &ratio=16) opens the app on that brew. */
+  (function () {
+    try {
+      var q = new URLSearchParams(location.search);
+      if (![].some.call(['method', 'coffee', 'water', 'ratio'], function (k) { return q.has(k); })) return;
+      if (M[q.get('method')]) S.method = q.get('method');
+      var m = M[S.method], p = S.per[S.method] = S.per[S.method] || { ratio: m.def, driver: 'coffee', amount: m.start };
+      var r = parseFloat(q.get('ratio')), c = parseFloat(q.get('coffee')), w = parseFloat(q.get('water'));
+      if (r >= m.min && r <= m.max) p.ratio = r;
+      if (c >= 0) { p.driver = 'coffee'; p.amount = c; } else if (w >= 0) { p.driver = 'water'; p.amount = w; }
+      history.replaceState(null, '', location.pathname);
+      setTimeout(save, 0);
+    } catch (e) {}
+  })();
   function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
   function cur() { return S.per[S.method]; }
   function calcFor(m, p) {
