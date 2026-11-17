@@ -443,6 +443,15 @@ button:disabled { opacity: .8; }
         <p class="about">How much water each pot takes. On the Brew tab, tap a pot to fill it and get the coffee dose for your strength.</p>
         <div id="gearList" class="view"></div>
         <h2>Feel</h2>
+        <button class="gear-row setrow" id="clockBtn" type="button" role="switch" aria-checked="false" hidden><span class="who"><b>Ring with iPhone Clock</b><span class="small muted">Start hands the countdown to your Clock app, so it rings when locked or on silent</span></span><i class="tog" aria-hidden="true"></i></button>
+        <div class="card small" id="clockHow" hidden>
+          <span class="label">One-time setup</span>
+          <ol class="steps">
+            <li>In Shortcuts, tap + and name the shortcut <b>Brew Timer</b>.</li>
+            <li>Add the action <b>Start Timer</b>. Tap its duration, pick <b>Shortcut Input</b>, set the unit to <b>seconds</b>.</li>
+            <li>Back here, tap Start. Shortcuts opens for a moment, starts the timer, and you swipe back.</li>
+          </ol>
+        </div>
         <button class="gear-row setrow" id="soundBtn" type="button" role="switch" aria-checked="true"><span class="who"><b>Scale ticks</b><span class="small muted">A soft click as the scale moves</span></span><i class="tog" aria-hidden="true"></i></button>
       </div>
     </div>
@@ -562,7 +571,7 @@ button:disabled { opacity: .8; }
 
   /* ---------- state ---------- */
   var KEY = 'brewdose.v2';
-  var S = { method: 'press', per: {}, saved: [], tried: {}, sound: true, gear: [
+  var S = { method: 'press', per: {}, saved: [], tried: {}, sound: true, clock: false, gear: [
     { id: 1, name: 'Chambord', method: 'press', ml: 300 },
     { id: 2, name: 'Eileen', method: 'press', ml: 900 },
     { id: 3, name: 'Phin', method: 'phin', ml: 100 }
@@ -574,6 +583,7 @@ button:disabled { opacity: .8; }
       S.per = raw.per; S.saved = Array.isArray(raw.saved) ? raw.saved : []; S.tried = raw.tried || {};
       if (Array.isArray(raw.gear)) S.gear = raw.gear;
       if (raw.sound === false) S.sound = false;
+      if (raw.clock === true) S.clock = true;
     }
   } catch (e) {}
   ORDER.forEach(function (k) {
@@ -922,18 +932,28 @@ button:disabled { opacity: .8; }
     if (lock) { try { lock.release(); } catch (e) {} lock = null; }
     idleLabel();
   }
+  /* The page's own bell. Web Audio is 'ambient' on iOS and the silent switch mutes it, so for the
+     bell the session switches to 'playback', which plays through silent mode, then back again.
+     It only rings while the app is open: iOS pauses a page that is in the background or locked.
+     For a timer that rings anyway, Settings has 'Ring with iPhone Clock'. */
   function beep() {
+    try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
     try {
-      if (!audio) return;
-      [0, 0.35, 0.7].forEach(function (t) {
-        var o = audio.createOscillator(), g = audio.createGain();
-        o.frequency.value = 880; o.connect(g); g.connect(audio.destination);
-        g.gain.setValueAtTime(0.25, audio.currentTime + t);
-        g.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + t + 0.25);
-        o.start(audio.currentTime + t); o.stop(audio.currentTime + t + 0.26);
-      });
+      unlock(true);
+      if (audio) {
+        var t0 = audio.currentTime + 0.05;
+        [0, 0.3, 0.6, 1.5, 1.8, 2.1, 3, 3.3, 3.6].forEach(function (t) {
+          var o = audio.createOscillator(), g = audio.createGain();
+          o.type = 'triangle'; o.frequency.value = 880; o.connect(g); g.connect(audio.destination);
+          g.gain.setValueAtTime(0.0001, t0 + t);
+          g.gain.exponentialRampToValueAtTime(0.5, t0 + t + 0.01);
+          g.gain.exponentialRampToValueAtTime(0.001, t0 + t + 0.25);
+          o.start(t0 + t); o.stop(t0 + t + 0.27);
+        });
+      }
     } catch (e) {}
-    try { if (navigator.vibrate) navigator.vibrate([200, 100, 200]); } catch (e) {}
+    try { if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 400]); } catch (e) {}
+    setTimeout(function () { try { if (navigator.audioSession) navigator.audioSession.type = 'ambient'; } catch (e) {} }, 4500);
   }
   function frame() {
     var left = (endAt - Date.now()) / 1000;
@@ -958,6 +978,11 @@ button:disabled { opacity: .8; }
     }
     if (!m.timer) return;
     unlock(true);
+    /* Hand the countdown to the iPhone's Clock: it rings when locked, in silent mode, and shows on the Lock Screen.
+       The 'Brew Timer' shortcut is a single Start Timer action fed with the seconds. */
+    if (S.clock && IOS) {
+      location.href = 'shortcuts://run-shortcut?name=' + encodeURIComponent('Brew Timer') + '&input=text&text=' + m.timer[0];
+    }
     try { if (navigator.wakeLock) navigator.wakeLock.request('screen').then(function (l) { lock = l; }).catch(function () {}); } catch (e) {}
     total = m.timer[0]; endAt = Date.now() + total * 1000;
     go.className = 'go running'; frame(); tick = setInterval(frame, 250);
@@ -1111,6 +1136,11 @@ button:disabled { opacity: .8; }
   function paintSound() { soundBtn.setAttribute('aria-checked', String(S.sound)); }
   soundBtn.addEventListener('click', function () { S.sound = !S.sound; save(); paintSound(); if (S.sound) { unlock(true); tickSound(true); } });
   paintSound();
+  var clockBtn = $('clockBtn');
+  function paintClock() { clockBtn.setAttribute('aria-checked', String(S.clock)); $('clockHow').hidden = !S.clock; }
+  clockBtn.hidden = !IOS;
+  clockBtn.addEventListener('click', function () { S.clock = !S.clock; save(); paintClock(); });
+  paintClock();
 
   renderMethod(true); renderExplore(); renderSaved(); hx(document);
   window.addEventListener('load', function () { setRuler(false); });
